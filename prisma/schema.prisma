@@ -1,0 +1,125 @@
+// File: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  // Kita hapus output custom biar default ke node_modules (Paling aman)
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// --- DI BAWAH INI ADALAH MODEL DATABASE KITA ---
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  preferences   String?   
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  paymentMethods PaymentMethod[]
+  trips          Trip[]
+  calendar       CalendarEvent[]
+  auditLogs      AuditLog[]
+}
+
+model PaymentMethod {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  last4Digits   String   
+  token         String   
+  brand         String   
+  isDefault     Boolean  @default(false)
+  trips         Trip[]   
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  start       DateTime
+  end         DateTime
+  description String?
+  isAllDay    Boolean  @default(false)
+}
+
+model Trip {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String   
+  status          String   @default("DRAFT") 
+  paymentMethodId String?
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  bookings        Booking[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Flight {
+  id          String   @id @default(cuid())
+  airline     String
+  flightCode  String   
+  origin      String   
+  destination String   
+  departure   DateTime
+  arrival     DateTime
+  price       Int
+  bookings    Booking[]
+}
+
+model Hotel {
+  id            String   @id @default(cuid())
+  name          String
+  city          String
+  address       String
+  rating        Float
+  pricePerNight Int
+  amenities     String?
+  bookings      Booking[]
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  name        String
+  city        String
+  durationMin Int
+  price       Int
+  bookings    Booking[]
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  tripId        String
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  
+  type          String   
+  
+  flightId      String?
+  flight        Flight?  @relation(fields: [flightId], references: [id])
+  hotelId       String?
+  hotel         Hotel?   @relation(fields: [hotelId], references: [id])
+  activityId    String?
+  activity      Activity? @relation(fields: [activityId], references: [id])
+  
+  totalAmount   Int
+  bookingDetails String? 
+  status        String   @default("PENDING") 
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   
+  metadata    String?  
+  severity    String   @default("INFO")
+  timestamp   DateTime @default(now())
+}

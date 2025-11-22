@@ -29,8 +29,8 @@ async function getMyBookings() {
     include: {
       trip: true,
       flight: true,
-      hotel: true,
-      activity: true,
+      hotel: { include: { location: true } },
+      activity: { include: { location: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -97,7 +97,7 @@ export default async function HistoryPage() {
                         <div className="flex flex-col">
                           <span>{booking.type === 'FLIGHT' ? booking.flight?.airline : booking.type === 'HOTEL' ? booking.hotel?.name : booking.activity?.name}</span>
                           <span className="text-xs text-muted-foreground font-normal">
-                            {booking.type === 'FLIGHT' ? `${booking.flight?.origin} ➝ ${booking.flight?.destination}` : booking.type === 'HOTEL' ? booking.hotel?.city : booking.activity?.city}
+                            {booking.type === 'FLIGHT' ? `${booking.flight?.originCode} ➝ ${booking.flight?.destCode}` : booking.type === 'HOTEL' ? booking.hotel?.location?.name : booking.activity?.location?.name}
                           </span>
                         </div>
                       </TableCell>

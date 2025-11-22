@@ -1,21 +1,45 @@
-// File: prisma/schema.prisma
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
-  // Kita hapus output custom biar default ke node_modules (Paling aman)
 }
 
 datasource db {
   provider  = "postgresql"
 }
 
-// --- DI BAWAH INI ADALAH MODEL DATABASE KITA ---
+// --- ENUMS (TYPE SAFETY) ---
+enum BookingStatus {
+  DRAFT
+  PENDING_APPROVAL 
+  CONFIRMED        
+  REJECTED         
+  CANCELLED
+  FAILED
+}
+
+enum BookingType {
+  FLIGHT
+  HOTEL
+  ACTIVITY
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+// --- MODEL DATABASE: USER & CONTEXT ---
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String
+  
+  // JSON: {"seat": "window", "food": "halal", "maxBudgetPerTrip": 5000000}
   preferences   String?   
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -53,51 +77,95 @@ model Trip {
   user            User     @relation(fields: [userId], references: [id])
   name            String   
   status          String   @default("DRAFT") 
+  
   paymentMethodId String?
   paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  
   bookings        Booking[]
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// --- MASTER DATA: LOCATION ---
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Bali", "Jakarta", "Singapore"
+  code        String   @unique // IATA Code (e.g. "DPS", "JKT", "SIN")
+  country     String   // e.g. "Indonesia"
+  image       String?  // URL Image
+  description String?  
+  
+  airports    Flight[] @relation("Origin")
+  arrivals    Flight[] @relation("Destination")
+  hotels      Hotel[]
+  activities  Activity[]
+}
+
+// --- INVENTORY MOCK (LINKED TO LOCATION) ---
 
 model Flight {
   id          String   @id @default(cuid())
   airline     String
   flightCode  String   
-  origin      String   
-  destination String   
+  
+  // [UPDATED] Relasi ke Location (Origin)
+  originCode  String
+  origin      Location @relation("Origin", fields: [originCode], references: [code])
+  
+  // [UPDATED] Relasi ke Location (Destination)
+  destCode    String
+  destination Location @relation("Destination", fields: [destCode], references: [code])
+  
   departure   DateTime
   arrival     DateTime
   price       Int
+  
+  availableSeats Int   @default(60) 
+  
   bookings    Booking[]
 }
 
 model Hotel {
   id            String   @id @default(cuid())
   name          String
-  city          String
-  address       String
+  
+  // [UPDATED] Relasi ke Location (Pengganti kolom 'city' string)
+  locationId    String
+  location      Location @relation(fields: [locationId], references: [id])
+  
+  address       String? 
   rating        Float
   pricePerNight Int
-  amenities     String?
+  amenities     String? // JSON String
+  
   bookings      Booking[]
 }
 
 model Activity {
   id          String   @id @default(cuid())
   name        String
-  city        String
+  
+  // [UPDATED] Relasi ke Location
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id])
+  
   durationMin Int
   price       Int
+  
   bookings    Booking[]
 }
+
+// --- TRANSACTION & LOGS ---
 
 model Booking {
   id            String   @id @default(cuid())
   tripId        String
   trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  
-  type          String   
+
+  // [UPDATED] Pakai Enum
+  type          BookingType   
   
   flightId      String?
   flight        Flight?  @relation(fields: [flightId], references: [id])
@@ -107,8 +175,14 @@ model Booking {
   activity      Activity? @relation(fields: [activityId], references: [id])
   
   totalAmount   Int
-  bookingDetails String? 
-  status        String   @default("PENDING") 
+  bookingDetails String? // JSON Detail
+  
+  // [UPDATED] Kolom Wajib untuk Cek Bentrok Jadwal
+  startDate     DateTime 
+  endDate       DateTime 
+
+  // [UPDATED] Pakai Enum (Risk Mitigation)
+  status        BookingStatus @default(PENDING_APPROVAL) 
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -118,8 +192,11 @@ model AuditLog {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+  
   action      String   
   metadata    String?  
-  severity    String   @default("INFO")
+  
+  severity    AuditSeverity @default(INFO)
+  
   timestamp   DateTime @default(now())
 }

@@ -16,8 +16,8 @@ export async function GET(request: Request) {
   // }
 
   try {
-    // Filter Logic: Cari Hotel yg Location-nya cocok (Nama atau Kode)
-    const whereClause: Prisma.HotelWhereInput = {};
+    // Filter Logic: Cari Activity yg Location-nya cocok (Nama atau Kode)
+    const whereClause: Prisma.ActivityWhereInput = {};
 
     if (locationQuery) {
       whereClause.location = {
@@ -25,25 +25,19 @@ export async function GET(request: Request) {
       };
     }
 
-    const [hotels, total] = await prisma.$transaction([
-      prisma.hotel.findMany({
+    const [activities, total] = await prisma.$transaction([
+      prisma.activity.findMany({
         where: whereClause,
         take: limit,
         skip: skip,
         include: { location: true },
-        orderBy: { rating: 'desc' },
+        orderBy: { price: 'asc' },
       }),
-      prisma.hotel.count({ where: whereClause }),
+      prisma.activity.count({ where: whereClause }),
     ]);
 
-    // Transformasi: Parse JSON Amenities
-    const formattedHotels = hotels.map((hotel) => ({
-      ...hotel,
-      amenities: hotel.amenities ? JSON.parse(hotel.amenities) : [],
-    }));
-
     return NextResponse.json({
-      data: formattedHotels,
+      data: activities,
       meta: {
         total,
         page,

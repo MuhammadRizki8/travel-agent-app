@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'; // Untuk redirect
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function BookingButton({ itemId, type, price, userId }: { itemId: string; type: 'FLIGHT' | 'HOTEL'; price: number; userId: string }) {
+export default function BookingButton({ itemId, type, price, userId }: { itemId: string; type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY'; price: number; userId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 

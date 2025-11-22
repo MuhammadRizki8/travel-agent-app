@@ -14,7 +14,12 @@ const formatRupiah = (n: number) => new Intl.NumberFormat('id-ID', { style: 'cur
 async function getBooking(id: string) {
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { flight: true, hotel: true, activity: true, trip: { include: { user: { include: { paymentMethods: true } } } } },
+    include: {
+      flight: true,
+      hotel: { include: { location: true } },
+      activity: { include: { location: true } },
+      trip: { include: { user: { include: { paymentMethods: true } } } },
+    },
   });
   return booking;
 }
@@ -28,7 +33,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
   // Tentukan Nama Item & Detail
   const itemName = booking.type === 'FLIGHT' ? booking.flight?.airline : booking.type === 'HOTEL' ? booking.hotel?.name : booking.activity?.name;
 
-  const itemDesc = booking.type === 'FLIGHT' ? `${booking.flight?.origin} ➝ ${booking.flight?.destination}` : booking.type === 'HOTEL' ? booking.hotel?.city : booking.activity?.city;
+  const itemDesc = booking.type === 'FLIGHT' ? `${booking.flight?.originCode} ➝ ${booking.flight?.destCode}` : booking.type === 'HOTEL' ? booking.hotel?.location?.name : booking.activity?.location?.name;
 
   const paymentMethod = booking.trip.user.paymentMethods[0];
 

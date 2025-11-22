@@ -27,11 +27,12 @@ async function getSearchResults(searchParams: any) {
       if (origin && destination) {
         data = await prisma.flight.findMany({
           where: {
-            origin: { equals: origin, mode: 'insensitive' },
-            destination: { equals: destination, mode: 'insensitive' },
+            originCode: { equals: origin, mode: 'insensitive' },
+            destCode: { equals: destination, mode: 'insensitive' },
             departure: { gte: new Date() },
           },
           orderBy: { price: 'asc' },
+          include: { origin: true, destination: true },
         });
       }
     } else if (type === 'hotel') {
@@ -39,8 +40,9 @@ async function getSearchResults(searchParams: any) {
       if (city) {
         data = await prisma.hotel.findMany({
           where: {
-            city: { contains: city, mode: 'insensitive' },
+            location: { name: { contains: city, mode: 'insensitive' } },
           },
+          include: { location: true },
         });
       }
     }
@@ -132,7 +134,7 @@ function FlightCard({ item }: { item: any }) {
             <div className="text-center">
               <p className="text-xl font-bold">{new Date(item.departure).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               <Badge variant="secondary" className="text-xs font-mono">
-                {item.origin}
+                {item.originCode}
               </Badge>
             </div>
 
@@ -147,7 +149,7 @@ function FlightCard({ item }: { item: any }) {
             <div className="text-center">
               <p className="text-xl font-bold">{new Date(item.arrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               <Badge variant="secondary" className="text-xs font-mono">
-                {item.destination}
+                {item.destCode}
               </Badge>
             </div>
           </div>
@@ -189,7 +191,7 @@ function HotelCard({ item }: { item: any }) {
               <div className="flex items-center gap-1 text-amber-500 mt-1">
                 <Star className="w-4 h-4 fill-current" />
                 <span className="font-medium text-sm">{item.rating}</span>
-                <span className="text-muted-foreground text-sm ml-2">• {item.city}</span>
+                <span className="text-muted-foreground text-sm ml-2">• {item.location?.name}</span>
               </div>
             </div>
             <div className="text-right">

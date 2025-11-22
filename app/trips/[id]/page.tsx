@@ -9,6 +9,7 @@ import { formatRupiah } from '@/lib/utils';
 import { ArrowLeft, Calendar, Clock, Plane, Hotel, Ticket } from 'lucide-react';
 import TripActions from '@/components/trips/TripActions';
 import DeleteBookingButton from '@/components/trips/DeleteBookingButton';
+import CheckoutFlowButton from '@/components/trips/CheckoutFlowButton';
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,11 +47,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div className="flex gap-2">
               <TripActions trip={trip} />
-              {trip.status === 'DRAFT' && trip.bookings.length > 0 && (
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" asChild>
-                  <Link href={`/checkout/${trip.id}`}>Checkout</Link>
-                </Button>
-              )}
+              {trip.status === 'DRAFT' && trip.bookings.length > 0 && <CheckoutFlowButton tripId={trip.id} />}
             </div>
           </div>
         </div>
@@ -129,9 +126,12 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                     </div>
                   </Card>
                 ))}
-                <Button>
-                  <Link href="/">Add More Items</Link>
-                </Button>
+                {/* if status is draft show add more items button */}
+                {trip.status === 'DRAFT' && (
+                  <Button>
+                    <Link href="/">Add More Items</Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>

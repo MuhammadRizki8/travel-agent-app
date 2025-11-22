@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 
 const ITEMS_PER_PAGE = 5;
 
-export async function getData(type: 'flight' | 'hotel' | 'activity' | 'location', query: string, page: number) {
+export async function getListingMaster(type: 'flight' | 'hotel' | 'activity' | 'location', query: string, page: number) {
   const skip = (page - 1) * ITEMS_PER_PAGE;
 
   if (type === 'flight') {
@@ -155,7 +155,66 @@ export async function getCurrentUser() {
       where: { id: userId },
       select: { name: true, email: true, id: true },
     });
-  } catch (e) {
-    return null;
+  } catch (error) {
+    return error;
   }
+}
+
+export async function getUserTrips(userId: string) {
+  return prisma.trip.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      bookings: {
+        select: { id: true, type: true, status: true, totalAmount: true, startDate: true, endDate: true },
+      },
+    },
+  });
+}
+
+export async function getTripById(tripId: string) {
+  return prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      bookings: {
+        orderBy: { startDate: 'asc' },
+        include: {
+          flight: { include: { origin: true, destination: true } },
+          hotel: { include: { location: true } },
+          activity: { include: { location: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function getAllLocations() {
+  return prisma.location.findMany({
+    orderBy: { name: 'asc' },
+  });
+}
+
+export async function getAllFlights() {
+  return prisma.flight.findMany({
+    take: 50,
+    include: { origin: true, destination: true },
+    orderBy: { departure: 'asc' },
+    where: { departure: { gte: new Date() }, availableSeats: { gt: 0 } },
+  });
+}
+
+export async function getAllHotels() {
+  return prisma.hotel.findMany({
+    take: 50,
+    include: { location: true },
+    orderBy: { rating: 'desc' },
+  });
+}
+
+export async function getAllActivities() {
+  return prisma.activity.findMany({
+    take: 50,
+    include: { location: true },
+    orderBy: { price: 'asc' },
+  });
 }

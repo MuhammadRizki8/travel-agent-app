@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/data';
 
 export default async function Navbar() {
-  const user = await getCurrentUser();
+  const user = (await getCurrentUser()) as { name?: string } | null;
 
   return (
     <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -17,8 +17,8 @@ export default async function Navbar() {
 
         {/* Menu Items */}
         <div className="flex items-center gap-4">
-          <Link href="/history" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-            My Bookings
+          <Link href="/trips" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+            My Trips
           </Link>
 
           <div className="h-8 w-px bg-gray-200 mx-2"></div>
@@ -30,7 +30,7 @@ export default async function Navbar() {
                   <User className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col items-start text-xs">
-                  <span className="font-semibold text-gray-900">{user.name}</span>
+                  <span className="font-semibold text-gray-900">{user?.name}</span>
                   <span className="text-gray-500 font-normal">Member</span>
                 </div>
               </Link>

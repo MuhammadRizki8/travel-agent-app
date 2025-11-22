@@ -27,11 +27,11 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
 
       if (!res.ok) throw new Error(data.error || 'Gagal booking');
 
-      // 2. Redirect ke Halaman Checkout/Review dengan Booking ID
-      router.push(`/checkout/${data.bookingId}`);
-    } catch (error) {
+      // 2. Redirect ke Halaman Checkout/Review dengan Trip ID
+      router.push(`/checkout/${data.tripId}`);
+    } catch (error: any) {
       console.error(error);
-      alert('❌ Terjadi kesalahan saat membuat draft booking.');
+      alert(`❌ ${error.message || 'Terjadi kesalahan saat membuat draft booking.'}`);
       setLoading(false);
     }
   };

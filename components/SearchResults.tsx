@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { CalendarClock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getData } from '@/lib/data';
+import { getListingMaster } from '@/lib/data';
 import { FlightCard, FlightCardProps } from '@/components/cards/FlightCard';
 import { HotelCard, HotelCardProps } from '@/components/cards/HotelCard';
 import { ActivityCard, ActivityCardProps } from '@/components/cards/ActivityCard';
 import { LocationCard, LocationCardProps } from '@/components/cards/LocationCard';
 
 export async function SearchResults({ type, query, page, userId }: { type: 'flight' | 'hotel' | 'activity' | 'location'; query: string; page: number; userId: string | null }) {
-  const { data, total, totalPages } = await getData(type, query, page);
+  const { data, total, totalPages } = await getListingMaster(type, query, page);
 
   return (
     <div className="space-y-6 pb-12">

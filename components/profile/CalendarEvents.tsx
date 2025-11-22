@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Plus, Loader2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { addCalendarEvent, deleteCalendarEvent } from '@/app/profile/actions';
+import { addCalendarEvent, deleteCalendarEvent } from '@/lib/data/profile';
 
 export default function CalendarEvents({ events }: { events: CalendarEvent[] }) {
   const [isAdding, setIsAdding] = useState(false);
@@ -160,6 +160,13 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
                     </Label>
                     <Input id="end" name="end" type="datetime-local" required className="h-8 text-xs" />
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="description" className="text-xs">
+                    Description
+                  </Label>
+                  <Input id="description" name="description" placeholder="Event details..." className="h-8 text-sm" />
                 </div>
 
                 <div className="flex items-center gap-2">

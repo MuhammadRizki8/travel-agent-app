@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard, Trash2, Plus, Loader2 } from 'lucide-react';
-import { addPaymentMethod, deletePaymentMethod } from '@/app/profile/actions';
+import { addPaymentMethod, deletePaymentMethod } from '@/lib/data/profile';
 
 export default function PaymentMethods({ methods }: { methods: PaymentMethod[] }) {
   const [isAdding, setIsAdding] = useState(false);

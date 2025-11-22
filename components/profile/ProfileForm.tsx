@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { updateProfile } from '@/app/profile/actions';
+import { updateProfile } from '@/lib/data/profile';
 import { Loader2, Plane, Utensils, Armchair, Wallet, Heart, Coins } from 'lucide-react';
 
 const INTERESTS_LIST = ['Beach', 'Mountain', 'City', 'Culture', 'Luxury', 'Shopping', 'Nature', 'Food', 'Adventure', 'Relaxation'];

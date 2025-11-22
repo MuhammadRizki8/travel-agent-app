@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import BookingButton from '@/components/BookingButton';
-import { getHotelById, getUserId } from '@/lib/data';
+import { getHotelById, getUserId } from '@/lib/data/index';
 import { formatRupiah } from '@/lib/utils';
 
 export default async function HotelDetailPage({ params }: { params: Promise<{ id: string }> }) {

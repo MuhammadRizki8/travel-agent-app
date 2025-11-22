@@ -1,4 +1,4 @@
-import { getUserId, getUserProfile } from '@/lib/data';
+import { getUserId, getUserProfile } from '@/lib/data/index';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileForm from '@/components/profile/ProfileForm';
 import PaymentMethods from '@/components/profile/PaymentMethods';

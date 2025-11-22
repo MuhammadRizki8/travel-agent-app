@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Plane, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getCurrentUser } from '@/lib/data';
+import { getCurrentUser } from '@/lib/data/index';
 
 export default async function Navbar() {
   const user = (await getCurrentUser()) as { name?: string } | null;

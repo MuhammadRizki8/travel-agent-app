@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTripById, getUserId } from '@/lib/data';
+import { getTripById, getUserId } from '@/lib/data/index';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatRupiah } from '@/lib/utils';
-import { ArrowLeft, Calendar, CheckCircle, Clock, Plane, Hotel, Ticket, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Plane, Hotel, Ticket, Trash2 } from 'lucide-react';
 
-export default async function TripDetailPage({ params }: { params: { id: string } }) {
+export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const userId = await getUserId();
   if (!userId) return <div className="p-8 text-center">Please log in.</div>;
 
-  const trip = await getTripById(params.id);
+  const trip = await getTripById(id);
 
   if (!trip || trip.userId !== userId) {
     notFound();

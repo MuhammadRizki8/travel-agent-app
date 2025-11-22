@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { CalendarClock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getListingMaster } from '@/lib/data';
+import { getListingMaster } from '@/lib/data/search';
 import { FlightCard, FlightCardProps } from '@/components/cards/FlightCard';
 import { HotelCard, HotelCardProps } from '@/components/cards/HotelCard';
 import { ActivityCard, ActivityCardProps } from '@/components/cards/ActivityCard';

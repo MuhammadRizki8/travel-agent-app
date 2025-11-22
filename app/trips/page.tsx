@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { getUserId, getUserTrips, getAllFlights, getAllHotels, getAllActivities, getUserProfile } from '@/lib/data';
+import { getUserId, getUserTrips } from '@/lib/data/index';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, ArrowRight, Plane, Hotel, Ticket } from 'lucide-react';
+import { MapPin, ArrowRight, Plane, Hotel, Ticket } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import CreateTripModal from '@/components/trips/CreateTripModal';
 
@@ -24,9 +24,7 @@ export default async function TripsPage() {
     );
   }
 
-  const [trips, flights, hotels, activities, userProfile] = await Promise.all([getUserTrips(userId), getAllFlights(), getAllHotels(), getAllActivities(), getUserProfile(userId)]);
-
-  const paymentMethods = userProfile?.paymentMethods || [];
+  const trips = await getUserTrips(userId);
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4">
@@ -36,7 +34,7 @@ export default async function TripsPage() {
             <h1 className="text-3xl font-bold text-gray-900">My Trips</h1>
             <p className="text-gray-500 mt-1">Manage your upcoming adventures and past journeys.</p>
           </div>
-          <CreateTripModal flights={flights} hotels={hotels} activities={activities} paymentMethods={paymentMethods} />
+          <CreateTripModal />
         </div>
 
         {trips.length === 0 ? (

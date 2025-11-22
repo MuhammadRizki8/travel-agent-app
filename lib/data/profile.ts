@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { getUserId } from '@/lib/data';
+import { getUserId } from '@/lib/data/index';
 
 export async function updateProfile(formData: FormData) {
   const userId = await getUserId();

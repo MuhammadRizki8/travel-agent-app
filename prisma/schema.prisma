@@ -9,6 +9,13 @@ datasource db {
 }
 
 // --- ENUMS (TYPE SAFETY) ---
+enum TripStatus {
+  DRAFT      
+  CONFIRMED  
+  COMPLETED 
+  CANCELLED 
+}
+
 enum BookingStatus {
   DRAFT
   PENDING_APPROVAL 
@@ -76,8 +83,10 @@ model Trip {
   userId          String
   user            User     @relation(fields: [userId], references: [id])
   name            String   
-  status          String   @default("DRAFT") 
-  
+  description     String?
+  status          TripStatus @default(DRAFT) 
+  startDate       DateTime? 
+  endDate         DateTime?
   paymentMethodId String?
   paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
   

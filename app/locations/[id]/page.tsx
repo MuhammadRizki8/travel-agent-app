@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Map, Hotel, Ticket, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getLocationById } from '@/lib/data';
+import { getLocationById } from '@/lib/data/index';
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +20,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
       {/* HERO IMAGE */}
       <div className="relative h-[400px] w-full bg-gray-900">
         {location.image ? (
-          <img src={location.image} alt={location.name} className="w-full h-full object-cover opacity-60" />
+          <Image src={location.image} alt={location.name} className="w-full h-full object-cover opacity-60" fill />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-800">
             <Map className="w-24 h-24 text-gray-600" />

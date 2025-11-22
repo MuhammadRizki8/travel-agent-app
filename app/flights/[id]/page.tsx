@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import BookingButton from '@/components/BookingButton';
-import { getFlightById, getUserId } from '@/lib/data';
+import { getFlightById, getUserId } from '@/lib/data/index';
 import { formatRupiah } from '@/lib/utils';
 
 export default async function FlightDetailPage({ params }: { params: Promise<{ id: string }> }) {

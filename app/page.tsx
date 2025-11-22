@@ -4,7 +4,7 @@ import { Plane, Hotel, Search, Map, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { getUserId } from '@/lib/data';
+import { getUserId } from '@/lib/data/index';
 import { SearchResults } from '@/components/SearchResults';
 
 // --- COMPONENTS ---

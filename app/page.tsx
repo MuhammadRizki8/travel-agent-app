@@ -24,7 +24,7 @@ function SearchResultsSkeleton() {
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const resolvedSearchParams = await searchParams;
-  const type = (resolvedSearchParams.type as 'flight' | 'hotel' | 'activity' | 'location') || 'flight';
+  const type = (resolvedSearchParams.type as 'flight' | 'hotel' | 'activity' | 'location') || 'location';
   const query = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : resolvedSearchParams.q?.[0] || '';
   const page = Number(resolvedSearchParams.page) || 1;
   const userId = await getUserId();
@@ -44,6 +44,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           {/* TABS */}
           <div className="flex gap-4 border-b mb-6 overflow-x-auto">
             <Link
+              href="/?type=location"
+              className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              <div className="flex items-center gap-2">
+                <Map className="w-4 h-4" /> Destinasi
+              </div>
+            </Link>
+            <Link
               href="/?type=flight"
               className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'flight' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
@@ -62,14 +70,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             >
               <div className="flex items-center gap-2">
                 <Ticket className="w-4 h-4" /> Aktivitas
-              </div>
-            </Link>
-            <Link
-              href="/?type=location"
-              className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-            >
-              <div className="flex items-center gap-2">
-                <Map className="w-4 h-4" /> Destinasi
               </div>
             </Link>
           </div>

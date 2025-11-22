@@ -7,7 +7,7 @@ import { HotelCard, HotelCardProps } from '@/components/cards/HotelCard';
 import { ActivityCard, ActivityCardProps } from '@/components/cards/ActivityCard';
 import { LocationCard, LocationCardProps } from '@/components/cards/LocationCard';
 
-export async function SearchResults({ type, query, page, userId }: { type: 'flight' | 'hotel' | 'activity' | 'location'; query: string; page: number; userId: string | null }) {
+export async function SearchResults({ type, query, page, userId }: { type: 'location' | 'flight' | 'hotel' | 'activity'; query: string; page: number; userId: string | null }) {
   const { data, total, totalPages } = await getListingMaster(type, query, page);
 
   return (

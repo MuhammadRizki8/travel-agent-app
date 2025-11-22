@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { getUserId } from '@/lib/data/user';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -8,6 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plane, Hotel, Ticket, CheckCircle2, XCircle, Clock } from 'lucide-react';
+
+type BookingWithDetails = Prisma.BookingGetPayload<{
+  include: {
+    trip: true;
+    flight: { include: { origin: true; destination: true } };
+    hotel: { include: { location: true } };
+    activity: { include: { location: true } };
+  };
+}>;
 
 // Helper: Format Rupiah
 const formatRupiah = (amount: number) => {
@@ -77,7 +87,7 @@ export default async function HistoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  bookings.map((booking) => (
+                  bookings.map((booking: BookingWithDetails) => (
                     <TableRow key={booking.id} className="group">
                       {/* KOLOM 1: ICON TIPE */}
                       <TableCell>

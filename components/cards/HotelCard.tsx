@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Hotel, Star, MapPin, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +29,9 @@ export function HotelCard({ item, userId }: HotelCardProps) {
         <div>
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-bold text-xl text-gray-900">{item.name}</h3>
+              <Link href={`/hotels/${item.id}`} className="hover:underline">
+                <h3 className="font-bold text-xl text-gray-900">{item.name}</h3>
+              </Link>
               <div className="flex items-center gap-1 text-amber-500 mt-1">
                 <Star className="w-4 h-4 fill-current" />
                 <span className="font-medium text-sm">{item.rating}</span>
@@ -51,7 +54,7 @@ export function HotelCard({ item, userId }: HotelCardProps) {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end pt-4 border-t gap-2">
           {userId ? (
             <BookingButton itemId={item.id} type="HOTEL" price={item.pricePerNight} userId={userId} />
           ) : (
@@ -59,6 +62,9 @@ export function HotelCard({ item, userId }: HotelCardProps) {
               Login
             </Button>
           )}
+          <Button variant="outline" asChild>
+            <Link href={`/hotels/${item.id}`}>Detail</Link>
+          </Button>
         </div>
       </div>
     </Card>

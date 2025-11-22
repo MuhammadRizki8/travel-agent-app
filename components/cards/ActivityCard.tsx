@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Ticket, MapPin, CalendarClock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +28,9 @@ export function ActivityCard({ item, userId }: ActivityCardProps) {
         <div>
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-bold text-xl text-gray-900">{item.name}</h3>
+              <Link href={`/activities/${item.id}`} className="hover:underline">
+                <h3 className="font-bold text-xl text-gray-900">{item.name}</h3>
+              </Link>
               <div className="flex items-center gap-1 text-muted-foreground mt-1">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{item.location?.name}</span>
@@ -46,7 +49,7 @@ export function ActivityCard({ item, userId }: ActivityCardProps) {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end pt-4 border-t gap-2">
           {userId ? (
             <BookingButton itemId={item.id} type="ACTIVITY" price={item.price} userId={userId} />
           ) : (
@@ -54,6 +57,9 @@ export function ActivityCard({ item, userId }: ActivityCardProps) {
               Login
             </Button>
           )}
+          <Button variant="outline" asChild>
+            <Link href={`/activities/${item.id}`}>Detail</Link>
+          </Button>
         </div>
       </div>
     </Card>

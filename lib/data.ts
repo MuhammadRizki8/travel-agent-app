@@ -13,7 +13,13 @@ export async function getData(type: 'flight' | 'hotel' | 'activity' | 'location'
     };
 
     if (query) {
-      where.OR = [{ originCode: { contains: query, mode: 'insensitive' } }, { destCode: { contains: query, mode: 'insensitive' } }, { airline: { contains: query, mode: 'insensitive' } }];
+      where.OR = [
+        { originCode: { contains: query, mode: 'insensitive' } },
+        { destCode: { contains: query, mode: 'insensitive' } },
+        { airline: { contains: query, mode: 'insensitive' } },
+        { origin: { name: { contains: query, mode: 'insensitive' } } },
+        { destination: { name: { contains: query, mode: 'insensitive' } } },
+      ];
     }
 
     const [data, total] = await Promise.all([
@@ -88,6 +94,34 @@ export async function getData(type: 'flight' | 'hotel' | 'activity' | 'location'
   }
 }
 
+export async function getFlightById(id: string) {
+  return prisma.flight.findUnique({
+    where: { id },
+    include: { origin: true, destination: true },
+  });
+}
+
+export async function getHotelById(id: string) {
+  return prisma.hotel.findUnique({
+    where: { id },
+    include: { location: true },
+  });
+}
+
+export async function getActivityById(id: string) {
+  return prisma.activity.findUnique({
+    where: { id },
+    include: { location: true },
+  });
+}
+
+export async function getLocationById(id: string) {
+  return prisma.location.findUnique({
+    where: { id },
+    include: { hotels: true, activities: true },
+  });
+}
+
 export async function getUserId() {
   try {
     const user = await prisma.user.findUnique({
@@ -96,6 +130,32 @@ export async function getUserId() {
     return user?.id || null;
   } catch (e) {
     console.error('Gagal ambil user ID', e);
+    return null;
+  }
+}
+
+export async function getUserProfile(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      paymentMethods: true,
+      calendar: {
+        orderBy: { start: 'asc' },
+      },
+    },
+  });
+}
+
+export async function getCurrentUser() {
+  try {
+    const userId = await getUserId();
+    if (!userId) return null;
+
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true, id: true },
+    });
+  } catch (e) {
     return null;
   }
 }

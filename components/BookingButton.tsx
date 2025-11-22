@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'; // Untuk redirect
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function BookingButton({ itemId, type, price, userId }: { itemId: string; type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY'; price: number; userId: string }) {
+export default function BookingButton({ itemId, type, userId, className }: { itemId: string; type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY'; price: number; userId: string; className?: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -29,14 +29,15 @@ export default function BookingButton({ itemId, type, price, userId }: { itemId:
 
       // 2. Redirect ke Halaman Checkout/Review dengan Booking ID
       router.push(`/checkout/${data.bookingId}`);
-    } catch (e) {
+    } catch (error) {
+      console.error(error);
       alert('❌ Terjadi kesalahan saat membuat draft booking.');
       setLoading(false);
     }
   };
 
   return (
-    <Button onClick={handleCreateDraft} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">
+    <Button onClick={handleCreateDraft} disabled={loading} suppressHydrationWarning={true} className={`bg-blue-600 hover:bg-blue-700 ${className || ''}`}>
       {loading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses...

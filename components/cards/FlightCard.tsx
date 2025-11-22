@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Plane } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +35,9 @@ export function FlightCard({ item, userId }: FlightCardProps) {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-xs">{item.airline.substring(0, 2).toUpperCase()}</div>
               <div>
-                <h3 className="font-semibold text-gray-900">{item.airline}</h3>
+                <Link href={`/flights/${item.id}`} className="hover:underline">
+                  <h3 className="font-semibold text-gray-900">{item.airline}</h3>
+                </Link>
                 <p className="text-xs text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full w-fit">{item.flightCode}</p>
               </div>
             </div>
@@ -73,13 +76,18 @@ export function FlightCard({ item, userId }: FlightCardProps) {
             <p className="text-sm text-muted-foreground">Harga per orang</p>
             <p className="text-2xl font-bold text-blue-700">{formatRupiah(item.price)}</p>
           </div>
-          {userId ? (
-            <BookingButton itemId={item.id} type="FLIGHT" price={item.price} userId={userId} />
-          ) : (
-            <Button disabled variant="secondary">
-              Login
+          <div className="flex flex-col gap-2 w-full">
+            {userId ? (
+              <BookingButton itemId={item.id} type="FLIGHT" price={item.price} userId={userId} className="w-full" />
+            ) : (
+              <Button disabled variant="secondary" className="w-full">
+                Login
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="w-full" asChild>
+              <Link href={`/flights/${item.id}`}>Detail</Link>
             </Button>
-          )}
+          </div>
         </div>
       </div>
     </Card>

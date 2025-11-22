@@ -1,4 +1,4 @@
-import { getFlightById, getHotelById, getActivityById } from '@/lib/data/inventory';
+import { getFlightById, getHotelById, getActivityById } from '@/lib/data';
 import BookingForm from '@/components/trips/BookingForm';
 import { notFound } from 'next/navigation';
 

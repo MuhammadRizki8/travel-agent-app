@@ -90,3 +90,13 @@ export async function deleteCalendarEvent(id: string) {
 
   revalidatePath('/profile');
 }
+
+export async function getCalendarEvents() {
+  const userId = await getUserId();
+  if (!userId) return [];
+
+  return prisma.calendarEvent.findMany({
+    where: { userId },
+    orderBy: { start: 'asc' },
+  });
+}

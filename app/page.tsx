@@ -6,6 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getUserId } from '@/lib/data/index';
 import { SearchResults } from '@/components/SearchResults';
+import { SearchFilters } from '@/components/SearchFilters';
+import { getUniqueCountries, getAllLocations } from '@/lib/data/location';
+import { getUniqueAirlines } from '@/lib/data/flight';
 
 // --- COMPONENTS ---
 
@@ -29,6 +32,23 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const page = Number(resolvedSearchParams.page) || 1;
   const userId = await getUserId();
 
+  // Extract filters
+  const minPrice = resolvedSearchParams.minPrice ? Number(resolvedSearchParams.minPrice) : undefined;
+  const maxPrice = resolvedSearchParams.maxPrice ? Number(resolvedSearchParams.maxPrice) : undefined;
+  const minRating = resolvedSearchParams.minRating ? Number(resolvedSearchParams.minRating) : undefined;
+
+  // Specific filters
+  const country = typeof resolvedSearchParams.country === 'string' ? resolvedSearchParams.country : undefined;
+  const location = typeof resolvedSearchParams.location === 'string' ? resolvedSearchParams.location : undefined;
+  const airline = typeof resolvedSearchParams.airline === 'string' ? resolvedSearchParams.airline : undefined;
+  const origin = typeof resolvedSearchParams.origin === 'string' ? resolvedSearchParams.origin : undefined;
+  const destination = typeof resolvedSearchParams.destination === 'string' ? resolvedSearchParams.destination : undefined;
+  const date = typeof resolvedSearchParams.date === 'string' ? resolvedSearchParams.date : undefined;
+
+  const filters = { minPrice, maxPrice, minRating, country, location, airline, origin, destination, date };
+
+  const [countries, locations, airlines] = await Promise.all([getUniqueCountries(), getAllLocations(), getUniqueAirlines()]);
+
   return (
     <main className="min-h-screen bg-gray-50/50 font-sans">
       {/* HERO SECTION */}
@@ -39,7 +59,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 -mt-8">
+      <div className="max-w-6xl mx-auto px-4 -mt-8">
         <Card className="p-6 shadow-lg bg-white mb-8">
           {/* TABS */}
           <div className="flex gap-4 border-b mb-6 overflow-x-auto">
@@ -90,10 +110,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </form>
         </Card>
 
-        {/* LISTING WITH SUSPENSE */}
-        <Suspense key={type + query + page} fallback={<SearchResultsSkeleton />}>
-          <SearchResults type={type} query={query} page={page} userId={userId} />
-        </Suspense>
+        <div className="grid md:grid-cols-4 gap-6">
+          {/* SIDEBAR FILTERS */}
+          <div className="md:col-span-1">
+            <SearchFilters type={type} countries={countries} locations={locations} airlines={airlines} />
+          </div>
+
+          {/* LISTING WITH SUSPENSE */}
+          <div className="md:col-span-3">
+            <Suspense key={type + query + page + JSON.stringify(filters)} fallback={<SearchResultsSkeleton />}>
+              <SearchResults type={type} query={query} page={page} userId={userId} filters={filters} />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </main>
   );

@@ -1,15 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { Map, Hotel, Ticket, ArrowRight } from 'lucide-react';
+import { Map, Hotel, Ticket, ArrowRight, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getLocationById } from '@/lib/data/index';
+import { getLocationById, LocationWithDetails } from '@/lib/data/location';
+import { Hotel as HotelType, Activity as ActivityType } from '@prisma/client';
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const location = await getLocationById(id);
+  const location: LocationWithDetails | null = await getLocationById(id);
 
   if (!location) {
     notFound();
@@ -33,7 +34,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-12 -mt-20 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 py-12 -mt-20 relative z-10">
         <Card className="p-8 shadow-xl bg-white mb-8">
           <h2 className="text-2xl font-bold mb-4">Tentang {location.name}</h2>
           <p className="text-gray-600 leading-relaxed text-lg">
@@ -41,7 +42,42 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
           </p>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* FLIGHTS */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Plane className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold">Penerbangan</h3>
+              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href={`/?type=flight&q=${location.name}`}>
+                  Lihat Semua <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {location.arrivals && location.arrivals.length > 0 ? (
+                location.arrivals.slice(0, 3).map((flight) => (
+                  <Link key={flight.id} href={`/flights/${flight.id}`} className="block group">
+                    <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
+                      <div>
+                        <p className="font-medium group-hover:text-blue-600 transition-colors">{flight.airline}</p>
+                        <p className="text-sm text-muted-foreground">Dari: {flight.origin.name}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-600" />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm italic">Belum ada jadwal penerbangan.</p>
+              )}
+            </div>
+          </Card>
+
           {/* HOTELS */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
@@ -60,7 +96,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
             <div className="space-y-4">
               {location.hotels && location.hotels.length > 0 ? (
-                location.hotels.slice(0, 3).map((hotel) => (
+                location.hotels.slice(0, 3).map((hotel: HotelType) => (
                   <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group">
                     <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                       <div>
@@ -95,7 +131,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
             <div className="space-y-4">
               {location.activities && location.activities.length > 0 ? (
-                location.activities.slice(0, 3).map((activity) => (
+                location.activities.slice(0, 3).map((activity: ActivityType) => (
                   <Link key={activity.id} href={`/activities/${activity.id}`} className="block group">
                     <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                       <div>

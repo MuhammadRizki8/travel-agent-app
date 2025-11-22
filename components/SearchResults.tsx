@@ -1,14 +1,62 @@
 import Link from 'next/link';
 import { CalendarClock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getListingMaster } from '@/lib/data/search';
+import { searchFlights } from '@/lib/data/flight';
+import { searchHotels } from '@/lib/data/hotel';
+import { searchActivities } from '@/lib/data/activity';
+import { searchLocations } from '@/lib/data/location';
 import { FlightCard, FlightCardProps } from '@/components/cards/FlightCard';
 import { HotelCard, HotelCardProps } from '@/components/cards/HotelCard';
 import { ActivityCard, ActivityCardProps } from '@/components/cards/ActivityCard';
 import { LocationCard, LocationCardProps } from '@/components/cards/LocationCard';
 
-export async function SearchResults({ type, query, page, userId }: { type: 'location' | 'flight' | 'hotel' | 'activity'; query: string; page: number; userId: string | null }) {
-  const { data, total, totalPages } = await getListingMaster(type, query, page);
+const ITEMS_PER_PAGE = 5;
+
+async function getSearchResults(type: 'location' | 'flight' | 'hotel' | 'activity', query: string, page: number, filters?: any) {
+  const skip = (page - 1) * ITEMS_PER_PAGE;
+
+  if (type === 'flight') {
+    const { data, total } = await searchFlights(query, filters, skip, ITEMS_PER_PAGE);
+    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+  }
+  if (type === 'hotel') {
+    const { data, total } = await searchHotels(query, filters, skip, ITEMS_PER_PAGE);
+    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+  }
+  if (type === 'activity') {
+    const { data, total } = await searchActivities(query, filters, skip, ITEMS_PER_PAGE);
+    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+  }
+
+  // Default to location
+  const { data, total } = await searchLocations(query, filters, skip, ITEMS_PER_PAGE);
+  return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+}
+
+export async function SearchResults({
+  type,
+  query,
+  page,
+  userId,
+  filters,
+}: {
+  type: 'location' | 'flight' | 'hotel' | 'activity';
+  query: string;
+  page: number;
+  userId: string | null;
+  filters?: {
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    country?: string;
+    location?: string;
+    airline?: string;
+    origin?: string;
+    destination?: string;
+    date?: string;
+  };
+}) {
+  const { data, total, totalPages } = await getSearchResults(type, query, page, filters);
 
   return (
     <div className="space-y-6 pb-12">

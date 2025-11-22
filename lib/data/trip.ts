@@ -93,48 +93,79 @@ export async function createTripAction(prevState: unknown, formData: FormData) {
   }
 }
 
-export async function createBookingAction(prevState: unknown, formData: FormData) {
+export async function updateTripAction(tripId: string, formData: FormData) {
   const userId = await getUserId();
   if (!userId) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  const tripId = formData.get('tripId') as string;
-  const type = formData.get('type') as 'FLIGHT' | 'HOTEL' | 'ACTIVITY';
-  const itemId = formData.get('itemId') as string;
+  const name = formData.get('name') as string;
+  const description = formData.get('description') as string;
   const startDateStr = formData.get('startDate') as string;
   const endDateStr = formData.get('endDate') as string;
-  const totalAmount = parseInt(formData.get('totalAmount') as string);
-  const details = formData.get('details') as string;
 
-  if (!tripId || !type || !itemId || !startDateStr || !endDateStr || !totalAmount) {
-    return { success: false, error: 'Data booking tidak lengkap' };
+  if (!name) {
+    return { success: false, error: 'Nama trip wajib diisi' };
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingData: any = {
-      tripId,
-      type,
-      totalAmount,
-      bookingDetails: details,
-      startDate: new Date(startDateStr),
-      endDate: new Date(endDateStr),
-      status: 'PENDING_APPROVAL',
-    };
+    const trip = await prisma.trip.findUnique({
+      where: { id: tripId },
+    });
 
-    if (type === 'FLIGHT') bookingData.flightId = itemId;
-    if (type === 'HOTEL') bookingData.hotelId = itemId;
-    if (type === 'ACTIVITY') bookingData.activityId = itemId;
+    if (!trip || trip.userId !== userId) {
+      return { success: false, error: 'Trip tidak ditemukan atau akses ditolak' };
+    }
 
-    await prisma.booking.create({
-      data: bookingData,
+    const startDate = startDateStr ? new Date(startDateStr) : null;
+    const endDate = endDateStr ? new Date(endDateStr) : null;
+
+    if (startDate && endDate && endDate <= startDate) {
+      return { success: false, error: 'Tanggal selesai harus setelah tanggal mulai' };
+    }
+
+    await prisma.trip.update({
+      where: { id: tripId },
+      data: {
+        name,
+        description,
+        startDate,
+        endDate,
+      },
     });
 
     revalidatePath(`/trips/${tripId}`);
+    revalidatePath('/trips');
     return { success: true, error: '' };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'Gagal membuat booking' };
+    return { success: false, error: 'Gagal memperbarui trip' };
+  }
+}
+
+export async function deleteTripAction(tripId: string) {
+  const userId = await getUserId();
+  if (!userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const trip = await prisma.trip.findUnique({
+      where: { id: tripId },
+    });
+
+    if (!trip || trip.userId !== userId) {
+      return { success: false, error: 'Trip tidak ditemukan atau akses ditolak' };
+    }
+
+    await prisma.trip.delete({
+      where: { id: tripId },
+    });
+
+    revalidatePath('/trips');
+    return { success: true, error: '' };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: 'Gagal menghapus trip' };
   }
 }

@@ -18,6 +18,9 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [isNewTrip, setIsNewTrip] = useState(false);
   const [newTripName, setNewTripName] = useState('');
+  const [newTripDesc, setNewTripDesc] = useState('');
+  const [newTripStart, setNewTripStart] = useState('');
+  const [newTripEnd, setNewTripEnd] = useState('');
 
   const handleOpen = async () => {
     setLoading(true);
@@ -43,6 +46,10 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
       try {
         const formData = new FormData();
         formData.append('name', newTripName);
+        formData.append('description', newTripDesc);
+        formData.append('startDate', newTripStart);
+        formData.append('endDate', newTripEnd);
+
         const res = await createTripAction(null, formData);
         if (res.success && res.tripId) {
           router.push(`/trips/${res.tripId}/book?type=${type}&itemId=${itemId}`);
@@ -119,8 +126,25 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
                 </div>
 
                 {isNewTrip && (
-                  <div className="pl-6">
-                    <Input placeholder="Nama Trip (misal: Liburan Bali)" value={newTripName} onChange={(e) => setNewTripName(e.target.value)} />
+                  <div className="pl-6 space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="tripName">Nama Trip</Label>
+                      <Input id="tripName" placeholder="Contoh: Liburan Bali" value={newTripName} onChange={(e) => setNewTripName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="tripDesc">Deskripsi</Label>
+                      <Input id="tripDesc" placeholder="Deskripsi singkat..." value={newTripDesc} onChange={(e) => setNewTripDesc(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="startDate">Mulai</Label>
+                        <Input id="startDate" type="date" value={newTripStart} onChange={(e) => setNewTripStart(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="endDate">Selesai</Label>
+                        <Input id="endDate" type="date" value={newTripEnd} onChange={(e) => setNewTripEnd(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

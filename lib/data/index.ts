@@ -5,3 +5,4 @@ export * from './hotel';
 export * from './activity';
 export * from './location';
 export * from './profile';
+export * from './booking';

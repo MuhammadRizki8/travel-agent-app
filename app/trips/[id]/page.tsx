@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatRupiah } from '@/lib/utils';
-import { ArrowLeft, Calendar, Clock, Plane, Hotel, Ticket, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Plane, Hotel, Ticket } from 'lucide-react';
+import TripActions from '@/components/trips/TripActions';
+import DeleteBookingButton from '@/components/trips/DeleteBookingButton';
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,18 +33,25 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{trip.name}</h1>
+              <p className="text-gray-600 mt-1">{trip.description}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Badge variant={trip.status === 'DRAFT' ? 'outline' : 'default'} className={trip.status === 'DRAFT' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-600'}>
                   {trip.status}
                 </Badge>
-                <span className="text-sm text-gray-500">Created on {new Date(trip.createdAt).toLocaleDateString()}</span>
+
+                <p className="text-sm text-gray-500">
+                  {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : 'No start date'} - {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : 'No end date'}
+                </p>
               </div>
             </div>
-            {trip.status === 'DRAFT' && trip.bookings.length > 0 && (
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" asChild>
-                <Link href={`/checkout/${trip.id}`}>Proceed to Checkout</Link>
-              </Button>
-            )}
+            <div className="flex gap-2">
+              <TripActions trip={trip} />
+              {trip.status === 'DRAFT' && trip.bookings.length > 0 && (
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" asChild>
+                  <Link href={`/checkout/${trip.id}`}>Checkout</Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -100,6 +109,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                               <h3 className="font-bold text-lg">{booking.hotel.name}</h3>
                               <p className="text-sm text-gray-600">{booking.hotel.location.name}</p>
                               <p className="text-xs text-gray-500 mt-1">Check-in: {new Date(booking.startDate).toLocaleDateString()}</p>
+                              <p className="text-xs text-gray-500">Check-out: {new Date(booking.endDate).toLocaleDateString()}</p>
                             </div>
                           )}
                           {booking.type === 'ACTIVITY' && booking.activity && (
@@ -113,16 +123,15 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
                         <div className="flex justify-between items-center pt-3 border-t">
                           <span className="font-bold text-blue-600">{formatRupiah(booking.totalAmount)}</span>
-                          {trip.status === 'DRAFT' && (
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 h-8 px-2">
-                              <Trash2 className="h-4 w-4 mr-1" /> Remove
-                            </Button>
-                          )}
+                          {trip.status === 'DRAFT' && <DeleteBookingButton bookingId={booking.id} />}
                         </div>
                       </div>
                     </div>
                   </Card>
                 ))}
+                <Button>
+                  <Link href="/">Add More Items</Link>
+                </Button>
               </div>
             )}
           </div>

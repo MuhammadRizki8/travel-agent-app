@@ -20,6 +20,10 @@ export default async function Navbar() {
           <Link href="/trips" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
             My Trips
           </Link>
+          {/* link chat with ai */}
+          <Link href="/chat" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+            Chat with AI
+          </Link>
 
           <div className="h-8 w-px bg-gray-200 mx-2"></div>
 

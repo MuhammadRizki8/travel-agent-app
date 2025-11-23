@@ -54,6 +54,7 @@ model User {
   trips          Trip[]
   calendar       CalendarEvent[]
   auditLogs      AuditLog[]
+  searchPreference SearchPreference?
 }
 
 model PaymentMethod {
@@ -208,4 +209,14 @@ model AuditLog {
   severity    AuditSeverity @default(INFO)
   
   timestamp   DateTime @default(now())
+}
+
+// --- USER SEARCH PREFERENCES (Persisted per-user, used to store parsed search params)
+model SearchPreference {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parameters Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

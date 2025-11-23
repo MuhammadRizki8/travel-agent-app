@@ -40,13 +40,13 @@ export function HotelCard({ item, userId }: HotelCardProps) {
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-teal-700">{formatRupiah(item.pricePerNight)}</p>
-              <p className="text-xs text-muted-foreground">/ malam</p>
+              <p className="text-xs text-muted-foreground">/ night</p>
             </div>
           </div>
 
           <div className="flex gap-2 mt-4">
             <Badge variant="outline" className="gap-1">
-              <MapPin className="w-3 h-3" /> {item.address || 'Pusat Kota'}
+              <MapPin className="w-3 h-3" /> {item.address || 'City Center'}
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Users className="w-3 h-3" /> Family Friendly

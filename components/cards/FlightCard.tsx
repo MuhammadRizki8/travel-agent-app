@@ -52,11 +52,11 @@ export function FlightCard({ item, userId }: FlightCardProps) {
             </div>
 
             <div className="flex-1 flex flex-col items-center px-4">
-              <p className="text-xs text-muted-foreground mb-1">{duration.toFixed(1)} jam</p>
+              <p className="text-xs text-muted-foreground mb-1">{duration.toFixed(1)} hours</p>
               <div className="w-full h-px bg-gray-300 relative">
                 <Plane className="w-3 h-3 text-gray-400 absolute -top-1.5 right-0 rotate-90 md:rotate-0" />
               </div>
-              <p className="text-xs text-blue-600 mt-1 font-medium">Langsung</p>
+              <p className="text-xs text-blue-600 mt-1 font-medium">Direct</p>
             </div>
 
             <div className="text-center">
@@ -73,7 +73,7 @@ export function FlightCard({ item, userId }: FlightCardProps) {
 
         <div className="md:w-64 p-6 bg-gray-50/50 flex flex-col justify-center items-end md:items-center gap-3">
           <div className="text-right md:text-center">
-            <p className="text-sm text-muted-foreground">Harga per orang</p>
+            <p className="text-sm text-muted-foreground">Price per person</p>
             <p className="text-2xl font-bold text-blue-700">{formatRupiah(item.price)}</p>
           </div>
           <div className="flex flex-col gap-2 w-full">
@@ -85,7 +85,7 @@ export function FlightCard({ item, userId }: FlightCardProps) {
               </Button>
             )}
             <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href={`/flights/${item.id}`}>Detail</Link>
+              <Link href={`/flights/${item.id}`}>Details</Link>
             </Button>
           </div>
         </div>

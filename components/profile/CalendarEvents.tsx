@@ -26,7 +26,7 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
         const endDate = new Date(endLocal);
 
         if (endDate < startDate) {
-          alert('Waktu selesai tidak boleh lebih awal dari waktu mulai.');
+          alert('End time cannot be earlier than start time.');
           setLoading(false);
           return;
         }
@@ -39,7 +39,7 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
       setIsAdding(false);
     } catch (error) {
       console.error(error);
-      alert('Gagal menambahkan agenda.');
+      alert('Failed to add event.');
     } finally {
       setLoading(false);
     }
@@ -61,12 +61,12 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Agenda Saya</CardTitle>
-              <CardDescription>Daftar semua kegiatan dan perjalanan Anda.</CardDescription>
+              <CardTitle>My Agenda</CardTitle>
+              <CardDescription>List of all your activities and trips.</CardDescription>
             </div>
             {!isAdding && (
               <Button onClick={() => setIsAdding(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" /> Tambah Agenda
+                <Plus className="mr-2 h-4 w-4" /> Add Event
               </Button>
             )}
           </CardHeader>
@@ -76,40 +76,40 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
                 <CardContent className="pt-6">
                   <form action={handleAdd} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="title">Judul Kegiatan</Label>
-                      <Input id="title" name="title" placeholder="Contoh: Liburan ke Bali" required />
+                      <Label htmlFor="title">Event Title</Label>
+                      <Input id="title" name="title" placeholder="Example: Vacation to Bali" required />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="start">Mulai</Label>
+                        <Label htmlFor="start">Start</Label>
                         <Input id="start" name="start" type="datetime-local" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="end">Selesai</Label>
+                        <Label htmlFor="end">End</Label>
                         <Input id="end" name="end" type="datetime-local" required />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="description">Deskripsi</Label>
-                      <Input id="description" name="description" placeholder="Detail kegiatan..." />
+                      <Label htmlFor="description">Description</Label>
+                      <Input id="description" name="description" placeholder="Event details..." />
                     </div>
 
                     <div className="flex items-center gap-2">
                       <input type="checkbox" id="isAllDay" name="isAllDay" className="rounded border-gray-300" />
                       <Label htmlFor="isAllDay" className="font-normal">
-                        Sepanjang Hari
+                        All Day
                       </Label>
                     </div>
 
                     <div className="flex gap-2 justify-end">
                       <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>
-                        Batal
+                        Cancel
                       </Button>
                       <Button type="submit" disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Simpan
+                        Save
                       </Button>
                     </div>
                   </form>
@@ -121,7 +121,7 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
               {events.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <CalendarIcon className="mx-auto h-12 w-12 mb-3 opacity-20" />
-                  <p>Belum ada agenda yang tersimpan.</p>
+                  <p>No events saved yet.</p>
                 </div>
               ) : (
                 events.map((event) => (

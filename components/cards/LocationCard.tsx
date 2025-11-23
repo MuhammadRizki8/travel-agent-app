@@ -33,13 +33,13 @@ export function LocationCard({ item }: LocationCardProps) {
         </div>
       </Link>
       <div className="p-4">
-        <p className="text-sm text-muted-foreground line-clamp-2">{item.description || 'Destinasi wisata menarik untuk dikunjungi.'}</p>
+        <p className="text-sm text-muted-foreground line-clamp-2">{item.description || 'Interesting tourist destination to visit.'}</p>
         <div className="flex gap-2 mt-2">
           {/* <Button variant="link" className="px-0 text-blue-600" asChild>
-            <Link href={`/?type=hotel&q=${item.name}`}>Lihat Hotel &rarr;</Link>
+            <Link href={`/?type=hotel&q=${item.name}`}>View Hotels &rarr;</Link>
           </Button> */}
           <Button variant="link" className="px-0 text-blue-600 ml-auto" asChild>
-            <Link href={`/locations/${item.id}`}>Detail &rarr;</Link>
+            <Link href={`/locations/${item.id}`}>Details &rarr;</Link>
           </Button>
         </div>
       </div>

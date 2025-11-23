@@ -38,13 +38,13 @@ export function ActivityCard({ item, userId }: ActivityCardProps) {
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-orange-700">{formatRupiah(item.price)}</p>
-              <p className="text-xs text-muted-foreground">/ orang</p>
+              <p className="text-xs text-muted-foreground">/ person</p>
             </div>
           </div>
 
           <div className="flex gap-2 mt-4">
             <Badge variant="outline" className="gap-1">
-              <CalendarClock className="w-3 h-3" /> {item.durationMin} Menit
+              <CalendarClock className="w-3 h-3" /> {item.durationMin} Minutes
             </Badge>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function ActivityCard({ item, userId }: ActivityCardProps) {
             </Button>
           )}
           <Button variant="outline" asChild>
-            <Link href={`/activities/${item.id}`}>Detail</Link>
+            <Link href={`/activities/${item.id}`}>Details</Link>
           </Button>
         </div>
       </div>

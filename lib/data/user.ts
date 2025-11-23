@@ -13,7 +13,9 @@ export async function getUserId() {
   }
 }
 
-export async function getUserProfile(userId: string) {
+export async function getUserProfile() {
+  // get user id emo@travel.com  hacked for demo
+  const userId = (await getUserId()) || '';
   return prisma.user.findUnique({
     where: { id: userId },
     include: {

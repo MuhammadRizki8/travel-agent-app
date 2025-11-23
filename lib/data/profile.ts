@@ -100,3 +100,32 @@ export async function getCalendarEvents() {
     orderBy: { start: 'asc' },
   });
 }
+
+// Check if there is a schedule conflict with the user's Calendar Events
+export async function validateDateConflict(startDate: Date, endDate: Date) {
+  const userId = await getUserId();
+  if (!userId) throw new Error('Unauthorized');
+
+  // 1. Get all user calendar events
+  const calendarEvents = await prisma.calendarEvent.findMany({
+    where: { userId },
+  });
+
+  const conflicts: { title: string; start: Date; end: Date }[] = [];
+
+  // 2. Check for overlap
+  for (const event of calendarEvents) {
+    // Overlap logic: (StartA < EndB) and (EndA > StartB)
+    const isOverlapping = startDate < event.end && endDate > event.start;
+
+    if (isOverlapping) {
+      conflicts.push({
+        title: event.title,
+        start: event.start,
+        end: event.end,
+      });
+    }
+  }
+
+  return conflicts;
+}

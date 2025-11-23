@@ -1,18 +1,11 @@
-import { getUserId, getUserProfile } from '@/lib/data/index';
+import { getUserProfile } from '@/lib/data/index';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileForm from '@/components/profile/ProfileForm';
 import PaymentMethods from '@/components/profile/PaymentMethods';
 import CalendarEvents from '@/components/profile/CalendarEvents';
 
 export default async function ProfilePage() {
-  const userId = await getUserId();
-
-  if (!userId) {
-    // In a real app, redirect to login
-    return <div className="p-8 text-center">Please log in to view your profile.</div>;
-  }
-
-  const user = await getUserProfile(userId);
+  const user = await getUserProfile();
 
   if (!user) {
     return <div className="p-8 text-center">User not found.</div>;

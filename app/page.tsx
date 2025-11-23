@@ -54,8 +54,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* HERO SECTION */}
       <div className="bg-blue-900 text-white py-12 px-4">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Jelajahi Dunia Bersama Kami</h1>
-          <p className="text-blue-200">Temukan penerbangan dan hotel terbaik untuk perjalanan Anda.</p>
+          <h1 className="text-3xl font-bold mb-2">Explore the World with Us</h1>
+          <p className="text-blue-200">Find the best flights and hotels for your trip.</p>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'location' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               <div className="flex items-center gap-2">
-                <Map className="w-4 h-4" /> Destinasi
+                <Map className="w-4 h-4" /> Destinations
               </div>
             </Link>
             <Link
@@ -76,12 +76,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'flight' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               <div className="flex items-center gap-2">
-                <Plane className="w-4 h-4" /> Penerbangan
+                <Plane className="w-4 h-4" /> Flights
               </div>
             </Link>
             <Link href="/?type=hotel" className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'hotel' ? 'border-teal-600 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
               <div className="flex items-center gap-2">
-                <Hotel className="w-4 h-4" /> Hotel
+                <Hotel className="w-4 h-4" /> Hotels
               </div>
             </Link>
             <Link
@@ -89,7 +89,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               className={`pb-3 px-4 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${type === 'activity' ? 'border-orange-600 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               <div className="flex items-center gap-2">
-                <Ticket className="w-4 h-4" /> Aktivitas
+                <Ticket className="w-4 h-4" /> Activities
               </div>
             </Link>
           </div>
@@ -102,11 +102,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <Input
                 name="q"
                 defaultValue={query}
-                placeholder={type === 'flight' ? 'Cari maskapai, kota asal, atau tujuan...' : type === 'hotel' ? 'Cari nama hotel atau kota...' : type === 'activity' ? 'Cari aktivitas atau lokasi...' : 'Cari negara atau kota tujuan...'}
+                placeholder={
+                  type === 'flight' ? 'Search airline, origin, or destination...' : type === 'hotel' ? 'Search hotel name or city...' : type === 'activity' ? 'Search activity or location...' : 'Search country or destination city...'
+                }
                 className="pl-10"
               />
             </div>
-            <Button type="submit">Cari</Button>
+            <Button type="submit">Search</Button>
           </form>
         </Card>
 

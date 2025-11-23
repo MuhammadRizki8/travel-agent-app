@@ -81,7 +81,7 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {/* PRICE FILTER (Except Location) */}
         {type !== 'location' && (
           <div className="space-y-4 mb-6">
-            <Label>Rentang Harga</Label>
+            <Label>Price Range</Label>
             <div className="flex items-center gap-2">
               <Input name="minPrice" type="number" placeholder="Min" defaultValue={searchParams.get('minPrice') || ''} className="h-8 text-sm" />
               <span>-</span>
@@ -93,13 +93,13 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {/* LOCATION FILTER (Country) */}
         {type === 'location' && (
           <div className="space-y-4 mb-6">
-            <Label>Negara</Label>
+            <Label>Country</Label>
             <Select name="country" defaultValue={searchParams.get('country') || ''}>
               <SelectTrigger className="h-8 text-sm w-full">
-                <SelectValue placeholder="Pilih Negara" />
+                <SelectValue placeholder="Select Country" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua Negara</SelectItem>
+                <SelectItem value="all">All Countries</SelectItem>
                 {countries.map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
@@ -113,13 +113,13 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {/* HOTEL & ACTIVITY FILTER (Location) */}
         {(type === 'hotel' || type === 'activity') && (
           <div className="space-y-4 mb-6">
-            <Label>Lokasi</Label>
+            <Label>Location</Label>
             <Select name="location" defaultValue={searchParams.get('location') || ''}>
               <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Pilih Lokasi" />
+                <SelectValue placeholder="Select Location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua Lokasi</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 {locations.map((loc) => (
                   <SelectItem key={loc.id} value={loc.name}>
                     {loc.name}
@@ -134,13 +134,13 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {type === 'flight' && (
           <div className="space-y-4 mb-6">
             <div className="space-y-2">
-              <Label>Maskapai</Label>
+              <Label>Airline</Label>
               <Select name="airline" defaultValue={searchParams.get('airline') || ''}>
                 <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Pilih Maskapai" />
+                  <SelectValue placeholder="Select Airline" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Semua Maskapai</SelectItem>
+                  <SelectItem value="all">All Airlines</SelectItem>
                   {airlines.map((airline) => (
                     <SelectItem key={airline} value={airline}>
                       {airline}
@@ -150,13 +150,13 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Asal</Label>
+              <Label>Origin</Label>
               <Select name="origin" defaultValue={searchParams.get('origin') || ''}>
                 <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Pilih Kota Asal" />
+                  <SelectValue placeholder="Select Origin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Semua Kota</SelectItem>
+                  <SelectItem value="all">All Origins</SelectItem>
                   {locations.map((loc) => (
                     <SelectItem key={loc.id} value={loc.name}>
                       {loc.name} ({loc.code})
@@ -166,13 +166,13 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tujuan</Label>
+              <Label>Destination</Label>
               <Select name="destination" defaultValue={searchParams.get('destination') || ''}>
                 <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Pilih Kota Tujuan" />
+                  <SelectValue placeholder="Select Destination" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Semua Kota</SelectItem>
+                  <SelectItem value="all">All Destinations</SelectItem>
                   {locations.map((loc) => (
                     <SelectItem key={loc.id} value={loc.name}>
                       {loc.name} ({loc.code})
@@ -182,7 +182,7 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tanggal Keberangkatan</Label>
+              <Label>Departure Date</Label>
               <Input name="date" type="date" defaultValue={searchParams.get('date') || ''} className="h-8 text-sm" min={new Date().toISOString().split('T')[0]} />
             </div>
           </div>
@@ -191,7 +191,7 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {/* RATING FILTER (HOTEL ONLY) */}
         {type === 'hotel' && (
           <div className="space-y-4 mt-6">
-            <Label>Rating Minimal</Label>
+            <Label>Minimum Rating</Label>
             <div className="flex gap-2">
               <Input type="hidden" name="minRating" defaultValue={searchParams.get('minRating') || ''} />
               {[3, 4, 5].map((rating) => {
@@ -220,7 +220,7 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         )}
 
         <Button type="submit" className="w-full mt-6">
-          Terapkan Filter
+          Apply Filters
         </Button>
       </form>
     </Card>

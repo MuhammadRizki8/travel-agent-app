@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getUserTrips, createTripAction } from '@/lib/data/trip';
 
 export default function BookingButton({ itemId, type, userId, className }: { itemId: string; type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY'; price: number; userId: string; className?: string }) {
   const router = useRouter();
@@ -25,7 +24,9 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
   const handleOpen = async () => {
     setLoading(true);
     try {
-      const userTrips = await getUserTrips(userId);
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/trips`);
+      const userTrips = res.ok ? await res.json() : [];
       setTrips(userTrips);
       setIsOpen(true);
     } catch (error) {
@@ -44,17 +45,24 @@ export default function BookingButton({ itemId, type, userId, className }: { ite
       }
       setLoading(true);
       try {
-        const formData = new FormData();
-        formData.append('name', newTripName);
-        formData.append('description', newTripDesc);
-        formData.append('startDate', newTripStart);
-        formData.append('endDate', newTripEnd);
+        const payload = {
+          name: newTripName,
+          description: newTripDesc,
+          startDate: newTripStart,
+          endDate: newTripEnd,
+        };
 
-        const res = await createTripAction(null, formData);
-        if (res.success && res.tripId) {
-          router.push(`/trips/${res.tripId}/book?type=${type}&itemId=${itemId}`);
+        const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+        const res = await fetch(`${base}/api/trips`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data?.success && data?.tripId) {
+          router.push(`/trips/${data.tripId}/book?type=${type}&itemId=${itemId}`);
         } else {
-          alert(res.error || 'Gagal membuat trip');
+          alert(data?.error || 'Gagal membuat trip');
           setLoading(false);
         }
       } catch (error) {

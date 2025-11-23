@@ -1,4 +1,4 @@
-import { getTripById } from '@/lib/data/trip';
+import { prisma } from '@/lib/prisma'; // 👈 Pastikan path ini sesuai dengan file prisma instance kamu
 import { formatRupiah } from '@/lib/utils';
 import CheckoutForm from './CheckoutForm';
 import { notFound, redirect } from 'next/navigation';
@@ -9,7 +9,28 @@ import { CalendarDays, MapPin } from 'lucide-react';
 
 export default async function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const trip = await getTripById(id);
+
+  const trip = await prisma.trip.findUnique({
+    where: { id },
+    include: {
+      user: {
+        include: {
+          paymentMethods: true,
+        },
+      },
+      bookings: {
+        include: {
+          flight: true,
+          hotel: {
+            include: { location: true }, // Include Location untuk Hotel
+          },
+          activity: {
+            include: { location: true }, // Include Location untuk Activity
+          },
+        },
+      },
+    },
+  });
 
   if (!trip) {
     notFound();
@@ -20,7 +41,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
     redirect(`/trips/${trip.id}`);
   }
 
-  const totalAmount = trip.bookings.reduce((sum, booking) => sum + booking.totalAmount, 0);
+  const bookings = trip.bookings;
+  const totalAmount = bookings.reduce((sum, booking) => sum + (booking.totalAmount ?? 0), 0);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -34,7 +56,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
               <CardTitle>Ringkasan Pesanan: {trip.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {trip.bookings.map((booking) => (
+              {bookings.map((booking) => (
                 <div key={booking.id} className="flex justify-between items-start border-b pb-4 last:border-0 last:pb-0">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -47,12 +69,15 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
                     </div>
                     <div className="text-sm text-gray-500 flex items-center gap-2">
                       <CalendarDays className="h-3 w-3" />
+                      {/* Pastikan startDate/endDate valid date object */}
                       {new Date(booking.startDate).toLocaleDateString('id-ID')} - {new Date(booking.endDate).toLocaleDateString('id-ID')}
                     </div>
+
+                    {/* Logic Tampilan Location */}
                     {(booking.hotel || booking.activity) && (
                       <div className="text-sm text-gray-500 flex items-center gap-2">
                         <MapPin className="h-3 w-3" />
-                        {booking.hotel?.location.name || booking.activity?.location.name}
+                        {booking.hotel?.location?.name || booking.activity?.location?.name}
                       </div>
                     )}
                   </div>
@@ -72,7 +97,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
 
         {/* Payment Form */}
         <div className="md:col-span-1">
-          <CheckoutForm tripId={trip.id} paymentMethods={trip.user.paymentMethods} totalAmount={totalAmount} />
+          {/* Kita passing data yang sudah diambil dari DB ke Client Component */}
+          <CheckoutForm tripId={trip.id} paymentMethods={trip.user?.paymentMethods ?? []} totalAmount={totalAmount} />
         </div>
       </div>
     </div>

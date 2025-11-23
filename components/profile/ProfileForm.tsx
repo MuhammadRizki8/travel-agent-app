@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { User } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { updateProfile } from '@/lib/data/profile';
 import { Loader2, Plane, Utensils, Armchair, Wallet, Heart, Coins } from 'lucide-react';
 
 const INTERESTS_LIST = ['Beach', 'Mountain', 'City', 'Culture', 'Luxury', 'Shopping', 'Nature', 'Food', 'Adventure', 'Relaxation'];
@@ -24,6 +24,9 @@ interface UserPreferences {
 
 export default function ProfileForm({ user }: { user: User }) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [nameInput, setNameInput] = useState(user.name || '');
+
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
     try {
       return JSON.parse(user.preferences || '{}');
@@ -47,11 +50,24 @@ export default function ProfileForm({ user }: { user: User }) {
     });
   };
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     try {
-      await updateProfile(formData);
-      alert('Profile updated successfully!');
+      const payload = { name: nameInput, preferences: JSON.stringify(preferences) };
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/profile`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        alert('Profile updated successfully!');
+        router.refresh();
+      } else {
+        alert(data?.error || 'Failed to update profile.');
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to update profile.');
@@ -67,7 +83,7 @@ export default function ProfileForm({ user }: { user: User }) {
         <CardDescription>Update your personal details and travel preferences.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -76,14 +92,14 @@ export default function ProfileForm({ user }: { user: User }) {
 
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" defaultValue={user.name} required />
+              <Input id="name" name="name" value={nameInput} onChange={(e) => setNameInput(e.target.value)} required />
             </div>
           </div>
 
           <div className="space-y-6 border-t pt-6">
             <h3 className="text-lg font-medium">Travel Preferences</h3>
 
-            {/* Hidden input to submit the JSON string */}
+            {/* Hidden input to submit the JSON string (kept for form compatibility) */}
             <input type="hidden" name="preferences" value={JSON.stringify(preferences)} />
 
             <div className="grid gap-6 md:grid-cols-2">

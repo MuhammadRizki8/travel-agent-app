@@ -1,36 +1,28 @@
 import Link from 'next/link';
 import { CalendarClock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { searchFlights } from '@/lib/data/flight';
-import { searchHotels } from '@/lib/data/hotel';
-import { searchActivities } from '@/lib/data/activity';
-import { searchLocations } from '@/lib/data/location';
+// Data now served via API routes; components fetch from `/api/search`.
 import { FlightCard, FlightCardProps } from '@/components/cards/FlightCard';
 import { HotelCard, HotelCardProps } from '@/components/cards/HotelCard';
 import { ActivityCard, ActivityCardProps } from '@/components/cards/ActivityCard';
 import { LocationCard, LocationCardProps } from '@/components/cards/LocationCard';
 
-const ITEMS_PER_PAGE = 5;
+// ITEMS_PER_PAGE handled by API
 
-async function getSearchResults(type: 'location' | 'flight' | 'hotel' | 'activity', query: string, page: number, filters?: any) {
-  const skip = (page - 1) * ITEMS_PER_PAGE;
-
-  if (type === 'flight') {
-    const { data, total } = await searchFlights(query, filters, skip, ITEMS_PER_PAGE);
-    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
-  }
-  if (type === 'hotel') {
-    const { data, total } = await searchHotels(query, filters, skip, ITEMS_PER_PAGE);
-    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
-  }
-  if (type === 'activity') {
-    const { data, total } = await searchActivities(query, filters, skip, ITEMS_PER_PAGE);
-    return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+async function getSearchResults(type: 'location' | 'flight' | 'hotel' | 'activity', query: string, page: number, filters?: Record<string, unknown> | undefined) {
+  const params = new URLSearchParams();
+  params.set('type', type);
+  params.set('q', query || '');
+  params.set('page', String(page || 1));
+  if (filters) {
+    Object.entries(filters).forEach(([k, v]) => {
+      if (typeof v !== 'undefined' && v !== null) params.set(k, String(v));
+    });
   }
 
-  // Default to location
-  const { data, total } = await searchLocations(query, filters, skip, ITEMS_PER_PAGE);
-  return { data, total, totalPages: Math.ceil(total / ITEMS_PER_PAGE) };
+  const res = await fetch(new URL(`/api/search?${params.toString()}`, process.env.NEXTAUTH_URL || 'http://localhost:3000').toString());
+  if (!res.ok) return { data: [], total: 0, totalPages: 0 };
+  return res.json() as Promise<{ data: unknown[]; total: number; totalPages: number }>;
 }
 
 export async function SearchResults({
@@ -74,10 +66,12 @@ export async function SearchResults({
           </div>
         ) : (
           data.map((item) => {
-            if (type === 'flight') return <FlightCard key={item.id} item={item as unknown as FlightCardProps['item']} userId={userId} />;
-            if (type === 'hotel') return <HotelCard key={item.id} item={item as unknown as HotelCardProps['item']} userId={userId} />;
-            if (type === 'activity') return <ActivityCard key={item.id} item={item as unknown as ActivityCardProps['item']} userId={userId} />;
-            if (type === 'location') return <LocationCard key={item.id} item={item as unknown as LocationCardProps['item']} />;
+            const record = item as Record<string, unknown>;
+            const id = String(record.id);
+            if (type === 'flight') return <FlightCard key={id} item={record as FlightCardProps['item']} userId={userId} />;
+            if (type === 'hotel') return <HotelCard key={id} item={record as HotelCardProps['item']} userId={userId} />;
+            if (type === 'activity') return <ActivityCard key={id} item={record as ActivityCardProps['item']} userId={userId} />;
+            if (type === 'location') return <LocationCard key={id} item={record as LocationCardProps['item']} />;
             return null;
           })
         )}

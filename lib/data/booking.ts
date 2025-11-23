@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getUserId } from './user';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 
 export async function createBookingAction(prevState: unknown, formData: FormData) {
   const userId = await getUserId();
@@ -23,24 +24,24 @@ export async function createBookingAction(prevState: unknown, formData: FormData
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bookingData: any = {
-      tripId,
+    const startDateObj = new Date(startDateStr);
+    const endDateObj = new Date(endDateStr);
+
+    const data: any = {
       type,
       totalAmount,
       bookingDetails: details,
-      startDate: new Date(startDateStr),
-      endDate: new Date(endDateStr),
+      startDate: startDateObj,
+      endDate: endDateObj,
       status: 'PENDING_APPROVAL',
+      trip: { connect: { id: tripId } },
     };
 
-    if (type === 'FLIGHT') bookingData.flightId = itemId;
-    if (type === 'HOTEL') bookingData.hotelId = itemId;
-    if (type === 'ACTIVITY') bookingData.activityId = itemId;
+    if (type === 'FLIGHT') data.flight = { connect: { id: itemId } };
+    if (type === 'HOTEL') data.hotel = { connect: { id: itemId } };
+    if (type === 'ACTIVITY') data.activity = { connect: { id: itemId } };
 
-    await prisma.booking.create({
-      data: bookingData,
-    });
+    await prisma.booking.create({ data });
 
     revalidatePath(`/trips/${tripId}`);
     return { success: true, error: '' };

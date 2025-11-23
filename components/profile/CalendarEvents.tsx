@@ -7,19 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Plus, Loader2, Clock, Calendar as CalendarIcon, AlignLeft } from 'lucide-react';
-import { addCalendarEvent, deleteCalendarEvent } from '@/lib/data/profile';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
 export default function CalendarEvents({ events }: { events: CalendarEvent[] }) {
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function handleAdd(formData: FormData) {
+  const router = useRouter();
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     try {
+      const form = e.currentTarget as HTMLFormElement;
+      const formData = new FormData(form);
       // Fix Timezone: Convert local input to ISO string (UTC)
-      const startLocal = formData.get('start') as string;
-      const endLocal = formData.get('end') as string;
+      const startLocal = String(formData.get('start') || '');
+      const endLocal = String(formData.get('end') || '');
 
       if (startLocal && endLocal) {
         const startDate = new Date(startLocal);
@@ -35,8 +40,27 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
         formData.set('end', endDate.toISOString());
       }
 
-      await addCalendarEvent(formData);
-      setIsAdding(false);
+      const payload = {
+        title: String(formData.get('title') || ''),
+        start: String(formData.get('start') || ''),
+        end: String(formData.get('end') || ''),
+        description: String(formData.get('description') || ''),
+        isAllDay: formData.get('isAllDay') ? 'on' : '',
+      };
+
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/profile/calendar`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setIsAdding(false);
+        router.refresh();
+      } else {
+        alert(data?.error || 'Failed to add event.');
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to add event.');
@@ -48,7 +72,14 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
   async function handleDelete(id: string) {
     if (!confirm('Are you sure you want to delete this event?')) return;
     try {
-      await deleteCalendarEvent(id);
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/profile/calendar/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data?.success) {
+        router.refresh();
+      } else {
+        alert(data?.error || 'Failed to delete event.');
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to delete event.');
@@ -74,7 +105,7 @@ export default function CalendarEvents({ events }: { events: CalendarEvent[] }) 
             {isAdding && (
               <Card className="mb-6 border-dashed bg-gray-50/50">
                 <CardContent className="pt-6">
-                  <form action={handleAdd} className="space-y-4">
+                  <form onSubmit={handleAdd} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="title">Event Title</Label>
                       <Input id="title" name="title" placeholder="Example: Vacation to Bali" required />

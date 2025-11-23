@@ -1,4 +1,5 @@
 import { getSearchPreferencesByUserId, upsertSearchPreferences } from '@/lib/data/preferences';
+import { Prisma } from '@prisma/client';
 
 type UserLike = { id?: string | null; name?: string | null } | null;
 
@@ -59,7 +60,7 @@ export async function handleUpdateTripIntent(input: unknown, user: UserLike, too
     }
 
     // Persist updated preferences into SearchPreference table
-    await upsertSearchPreferences(user.id, mergedParams as Record<string, unknown>);
+    await upsertSearchPreferences(user.id, mergedParams as Prisma.InputJsonValue);
     console.log('-> Persisted merged searchParameters for user', user.id);
 
     return mergedParams;
@@ -70,8 +71,7 @@ export async function handleUpdateTripIntent(input: unknown, user: UserLike, too
     // close console group if supported
     try {
       // call as a function to satisfy linter
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const c: any = console;
+      const c: Console = console;
       if (typeof c.groupEnd === 'function') c.groupEnd();
     } catch {
       /* ignore */

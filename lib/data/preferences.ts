@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export async function getSearchPreferencesByUserId(userId: string) {
   try {
@@ -10,7 +11,7 @@ export async function getSearchPreferencesByUserId(userId: string) {
   }
 }
 
-export async function upsertSearchPreferences(userId: string, parameters: Record<string, unknown>) {
+export async function upsertSearchPreferences(userId: string, parameters: Prisma.InputJsonValue) {
   try {
     const rec = await prisma.searchPreference.upsert({
       where: { userId },

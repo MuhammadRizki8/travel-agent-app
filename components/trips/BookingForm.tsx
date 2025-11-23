@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createBookingAction } from '@/lib/data/booking';
+// Use API route instead of importing server action
+
+import { Flight, Hotel, Activity } from '@/lib/types';
 
 interface BookingFormProps {
   tripId: string;
   type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  item: any;
+  item: Flight | Hotel | Activity;
 }
 
 export default function BookingForm({ tripId, type, item }: BookingFormProps) {
@@ -23,14 +24,14 @@ export default function BookingForm({ tripId, type, item }: BookingFormProps) {
 
   // Initialize state based on type
   const [startDate, setStartDate] = useState<string>(() => {
-    if (type === 'FLIGHT') return new Date(item.departure).toISOString();
+    if (type === 'FLIGHT') return new Date((item as Flight).departure).toISOString();
     if (type === 'ACTIVITY') return new Date().toISOString().split('T')[0];
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
 
   const [endDate, setEndDate] = useState<string>(() => {
-    if (type === 'FLIGHT') return new Date(item.arrival).toISOString();
+    if (type === 'FLIGHT') return new Date((item as Flight).arrival).toISOString();
     if (type === 'HOTEL') {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -52,16 +53,16 @@ export default function BookingForm({ tripId, type, item }: BookingFormProps) {
 
   // Calculate Total Amount (Derived State)
   const totalAmount = (() => {
-    if (type === 'FLIGHT') return item.price;
+    if (type === 'FLIGHT') return (item as Flight).price;
     if (type === 'HOTEL' && startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       const diffTime = end.getTime() - start.getTime(); // Can be negative if user picks wrong dates
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       const nights = diffDays > 0 ? diffDays : 1;
-      return item.pricePerNight * nights;
+      return (item as Hotel).pricePerNight * nights;
     }
-    if (type === 'ACTIVITY') return item.price * ticketQty;
+    if (type === 'ACTIVITY') return (item as Activity).price * ticketQty;
     return 0;
   })();
 
@@ -69,14 +70,21 @@ export default function BookingForm({ tripId, type, item }: BookingFormProps) {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append('tripId', tripId);
-    formData.append('type', type);
-    formData.append('itemId', item.id);
-    formData.append('totalAmount', totalAmount.toString());
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let details: any = {};
+    const payload: {
+      tripId: string;
+      type: 'FLIGHT' | 'HOTEL' | 'ACTIVITY';
+      itemId: string;
+      totalAmount: string;
+      details?: Record<string, unknown> | string;
+      startDate?: string;
+      endDate?: string;
+    } = {
+      tripId,
+      type,
+      itemId: item.id,
+      totalAmount: totalAmount.toString(),
+    };
+    let details: Record<string, unknown> = {};
     const finalStartDate = startDate;
     let finalEndDate = endDate;
 
@@ -86,22 +94,32 @@ export default function BookingForm({ tripId, type, item }: BookingFormProps) {
       details = { roomType, guests };
     } else if (type === 'ACTIVITY') {
       details = { ticketQty };
-      // Calculate end date based on duration
       const start = new Date(startDate);
-      const end = new Date(start.getTime() + item.durationMin * 60000);
+      const end = new Date(start.getTime() + (item as Activity).durationMin * 60000);
       finalEndDate = end.toISOString();
     }
 
-    formData.append('details', JSON.stringify(details));
-    formData.append('startDate', finalStartDate);
-    formData.append('endDate', finalEndDate);
+    payload.details = JSON.stringify(details);
+    payload.startDate = finalStartDate;
+    payload.endDate = finalEndDate;
 
-    const res = await createBookingAction(null, formData);
-
-    if (res.success) {
-      router.push(`/trips/${tripId}`);
-    } else {
-      alert(res.error);
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/bookings`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        router.push(`/trips/${tripId}`);
+      } else {
+        alert(data?.error || 'Gagal membuat booking');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Gagal membuat booking');
       setLoading(false);
     }
   };

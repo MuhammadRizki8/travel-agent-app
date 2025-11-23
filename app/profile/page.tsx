@@ -1,11 +1,17 @@
-import { getUserProfile } from '@/lib/data/index';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileForm from '@/components/profile/ProfileForm';
 import PaymentMethods from '@/components/profile/PaymentMethods';
 import CalendarEvents from '@/components/profile/CalendarEvents';
+import { User } from '@/lib/types';
 
 export default async function ProfilePage() {
-  const user = await getUserProfile();
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await (await import('next/headers')).headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
+  const res = await fetch(new URL('/api/user', base).toString());
+  const user: User | null = res.ok ? await res.json() : null;
 
   if (!user) {
     return <div className="p-8 text-center">User not found.</div>;
@@ -28,11 +34,11 @@ export default async function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="payment">
-            <PaymentMethods methods={user.paymentMethods} />
+            <PaymentMethods methods={user?.paymentMethods ?? []} />
           </TabsContent>
 
           <TabsContent value="calendar">
-            <CalendarEvents events={user.calendar} />
+            <CalendarEvents events={user?.calendar ?? []} />
           </TabsContent>
         </Tabs>
       </div>

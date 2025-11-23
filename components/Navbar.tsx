@@ -1,10 +1,16 @@
 import Link from 'next/link';
 import { Plane, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getCurrentUser } from '@/lib/data/index';
+import { headers } from 'next/headers';
 
 export default async function Navbar() {
-  const user = (await getCurrentUser()) as { name?: string } | null;
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
+  const res = await fetch(new URL('/api/user', base).toString());
+  const user = res.ok ? await res.json() : null;
 
   return (
     <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">

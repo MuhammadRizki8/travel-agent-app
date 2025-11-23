@@ -2,10 +2,16 @@ import { prisma } from '@/lib/prisma';
 
 export async function getUserId() {
   try {
-    // Hardcoded for demo purposes as per original code
-    const user = await prisma.user.findUnique({
-      where: { email: 'demo@travel.com' },
-    });
+    // Development convenience: allow overriding demo user email via env var
+    // If not provided, fall back to finding ANY user in the DB (dev only).
+    const demoEmail = process.env.DEMO_USER_EMAIL ?? process.env.NEXT_PUBLIC_DEMO_USER_EMAIL ?? 'demo@travel.com';
+    let user = await prisma.user.findUnique({ where: { email: demoEmail } });
+
+    if (!user) {
+      // If the configured demo email isn't present, try to return the first user (development convenience)
+      user = await prisma.user.findFirst();
+    }
+
     return user?.id || null;
   } catch (e) {
     console.error('Failed to fetch user ID', e);

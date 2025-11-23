@@ -1,20 +1,24 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { Map, Hotel, Ticket, ArrowRight, Plane } from 'lucide-react';
+import { Map, Ticket, ArrowRight, Plane, Hotel as HotelIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getLocationById, LocationWithDetails } from '@/lib/data/location';
-import { Hotel as HotelType, Activity as ActivityType } from '@prisma/client';
+import { Location, Flight, Hotel, Activity } from '@/lib/types';
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await (await import('next/headers')).headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
   const { id } = await params;
-  const location: LocationWithDetails | null = await getLocationById(id);
+  const res = await fetch(new URL(`/api/locations/${id}`, base).toString());
+  if (!res.ok) return notFound();
+  const location: (Location & { arrivals?: (Flight & { origin?: { name?: string }; destination?: { name?: string } })[]; hotels?: Hotel[]; activities?: Activity[] }) | null = await res.json();
 
-  if (!location) {
-    notFound();
-  }
+  if (!location) return notFound();
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -66,7 +70,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
                     <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                       <div>
                         <p className="font-medium group-hover:text-blue-600 transition-colors">{flight.airline}</p>
-                        <p className="text-sm text-muted-foreground">Dari: {flight.origin.name}</p>
+                        <p className="text-sm text-muted-foreground">Dari: {flight.origin?.name}</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-600" />
                     </div>
@@ -83,7 +87,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-teal-100 rounded-lg">
-                  <Hotel className="w-6 h-6 text-teal-600" />
+                  <HotelIcon className="w-6 h-6 text-teal-600" />
                 </div>
                 <h3 className="text-xl font-bold">Hotel Populer</h3>
               </div>
@@ -96,7 +100,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
             <div className="space-y-4">
               {location.hotels && location.hotels.length > 0 ? (
-                location.hotels.slice(0, 3).map((hotel: HotelType) => (
+                location.hotels.slice(0, 3).map((hotel) => (
                   <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group">
                     <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                       <div>
@@ -131,7 +135,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
             <div className="space-y-4">
               {location.activities && location.activities.length > 0 ? (
-                location.activities.slice(0, 3).map((activity: ActivityType) => (
+                location.activities.slice(0, 3).map((activity) => (
                   <Link key={activity.id} href={`/activities/${activity.id}`} className="block group">
                     <div className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                       <div>

@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Pencil, Trash2, Loader2 } from 'lucide-react';
-import { updateTripAction, deleteTripAction } from '@/lib/data/trip';
 
 interface TripActionsProps {
   trip: {
@@ -36,33 +35,45 @@ export default function TripActions({ trip }: TripActionsProps) {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('startDate', startDate);
-    formData.append('endDate', endDate);
-
-    const res = await updateTripAction(trip.id, formData);
-
-    setLoading(false);
-    if (res.success) {
-      setIsEditOpen(false);
-      router.refresh();
-    } else {
-      alert(res.error || 'Gagal memperbarui trip');
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const payload = { name, description, startDate, endDate };
+      const res = await fetch(`${base}/api/trips/${trip.id}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (data.success) {
+        setIsEditOpen(false);
+        router.refresh();
+      } else {
+        alert(data.error || 'Gagal memperbarui trip');
+      }
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      alert('Gagal memperbarui trip');
     }
   };
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await deleteTripAction(trip.id);
-
-    if (res.success) {
-      router.push('/trips');
-    } else {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/trips/${trip.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        router.push('/trips');
+      } else {
+        setLoading(false);
+        alert(data.error || 'Gagal menghapus trip');
+      }
+    } catch (err) {
+      console.error(err);
       setLoading(false);
-      alert(res.error || 'Gagal menghapus trip');
+      alert('Gagal menghapus trip');
     }
   };
 

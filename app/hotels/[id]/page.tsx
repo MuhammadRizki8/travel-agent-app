@@ -5,17 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import BookingButton from '@/components/BookingButton';
-import { getHotelById, getUserId } from '@/lib/data/index';
 import { formatRupiah } from '@/lib/utils';
 
 export default async function HotelDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await (await import('next/headers')).headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
   const { id } = await params;
-  const hotel = await getHotelById(id);
-  const userId = await getUserId();
+  const hotelRes = await fetch(new URL(`/api/hotels/${id}`, base).toString());
+  if (!hotelRes.ok) return notFound();
+  const hotel = await hotelRes.json();
 
-  if (!hotel) {
-    notFound();
-  }
+  const userRes = await fetch(new URL('/api/user', base).toString());
+  const user = userRes.ok ? await userRes.json() : null;
+  const userId = user?.id ?? null;
 
   const amenities = hotel.amenities ? JSON.parse(hotel.amenities) : ['WiFi Gratis', 'Kolam Renang', 'Sarapan', 'Parkir', 'AC'];
 

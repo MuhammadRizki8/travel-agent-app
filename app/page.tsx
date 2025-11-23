@@ -1,14 +1,13 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { Plane, Hotel, Search, Map, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { getUserId } from '@/lib/data/index';
 import { SearchResults } from '@/components/SearchResults';
+import { User } from '@/lib/types';
 import { SearchFilters } from '@/components/SearchFilters';
-import { getUniqueCountries, getAllLocations } from '@/lib/data/location';
-import { getUniqueAirlines } from '@/lib/data/flight';
 
 // --- COMPONENTS ---
 
@@ -30,7 +29,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const type = (resolvedSearchParams.type as 'flight' | 'hotel' | 'activity' | 'location') || 'location';
   const query = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : resolvedSearchParams.q?.[0] || '';
   const page = Number(resolvedSearchParams.page) || 1;
-  const userId = await getUserId();
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
+  const userRes = await fetch(new URL('/api/user', base).toString());
+  const user: User | null = userRes.ok ? await userRes.json() : null;
+  const userId = user?.id ?? null;
 
   // Extract filters
   const minPrice = resolvedSearchParams.minPrice ? Number(resolvedSearchParams.minPrice) : undefined;
@@ -47,7 +53,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const filters = { minPrice, maxPrice, minRating, country, location, airline, origin, destination, date };
 
-  const [countries, locations, airlines] = await Promise.all([getUniqueCountries(), getAllLocations(), getUniqueAirlines()]);
+  const [countries, locations] = await Promise.all([
+    fetch(new URL('/api/locations/countries', process.env.NEXTAUTH_URL || 'http://localhost:3000').toString()).then((r) => r.json()),
+    fetch(new URL('/api/locations', process.env.NEXTAUTH_URL || 'http://localhost:3000').toString()).then((r) => r.json()),
+  ]);
 
   return (
     <main className="min-h-screen bg-gray-50/50 font-sans">
@@ -115,7 +124,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="grid md:grid-cols-4 gap-6">
           {/* SIDEBAR FILTERS */}
           <div className="md:col-span-1">
-            <SearchFilters type={type} countries={countries} locations={locations} airlines={airlines} />
+            <SearchFilters type={type} countries={countries} locations={locations} />
           </div>
 
           {/* LISTING WITH SUSPENSE */}

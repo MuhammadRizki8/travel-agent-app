@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTripById, getUserId } from '@/lib/data/index';
+import { headers } from 'next/headers';
+// data access moved to API routes
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,19 +11,30 @@ import { ArrowLeft, Calendar, Clock, Plane, Hotel, Ticket } from 'lucide-react';
 import TripActions from '@/components/trips/TripActions';
 import DeleteBookingButton from '@/components/trips/DeleteBookingButton';
 import CheckoutFlowButton from '@/components/trips/CheckoutFlowButton';
+import { Trip, Booking, User } from '@/lib/types';
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
   const { id } = await params;
-  const userId = await getUserId();
-  if (!userId) return <div className="p-8 text-center">Please log in.</div>;
 
-  const trip = await getTripById(id);
+  const userRes = await fetch(new URL('/api/user', base).toString());
+  const user: User | null = userRes.ok ? await userRes.json() : null;
+  if (!user) return <div className="p-8 text-center">Please log in.</div>;
 
-  if (!trip || trip.userId !== userId) {
+  const tripRes = await fetch(new URL(`/api/trips/${id}`, base).toString());
+  if (!tripRes.ok) return notFound();
+  const trip: Trip = await tripRes.json();
+
+  if (!trip || trip.userId !== user.id) {
     notFound();
   }
 
-  const totalCost = trip.bookings.reduce((sum, b) => sum + b.totalAmount, 0);
+  const bookings = (trip.bookings || []) as Booking[];
+  const totalCost = bookings.reduce((sum, b) => sum + (b.totalAmount ?? 0), 0);
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4">
@@ -46,8 +58,16 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
               </div>
             </div>
             <div className="flex gap-2">
-              <TripActions trip={trip} />
-              {trip.status === 'DRAFT' && trip.bookings.length > 0 && <CheckoutFlowButton tripId={trip.id} />}
+              <TripActions
+                trip={{
+                  id: trip.id,
+                  name: trip.name,
+                  description: trip.description ?? null,
+                  startDate: trip.startDate ? new Date(trip.startDate) : null,
+                  endDate: trip.endDate ? new Date(trip.endDate) : null,
+                }}
+              />
+              {(trip.status ?? 'DRAFT') === 'DRAFT' && bookings.length > 0 && <CheckoutFlowButton tripId={trip.id} />}
             </div>
           </div>
         </div>
@@ -59,7 +79,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
               <Calendar className="h-5 w-5 text-blue-600" /> Itinerary
             </h2>
 
-            {trip.bookings.length === 0 ? (
+            {bookings.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-12 text-center">
                   <p className="text-gray-500 mb-4">This trip is empty.</p>
@@ -70,7 +90,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
               </Card>
             ) : (
               <div className="space-y-4">
-                {trip.bookings.map((booking) => (
+                {bookings.map((booking: Booking) => (
                   <Card key={booking.id} className="overflow-hidden">
                     <div className="flex">
                       <div className={`w-2 ${booking.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-yellow-400'}`} />
@@ -91,7 +111,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                           {booking.type === 'FLIGHT' && booking.flight && (
                             <div>
                               <h3 className="font-bold text-lg">
-                                {booking.flight.origin.code} → {booking.flight.destination.code}
+                                {booking.flight.origin?.code} → {booking.flight.destination?.code}
                               </h3>
                               <p className="text-sm text-gray-600">
                                 {booking.flight.airline} • {booking.flight.flightCode}
@@ -104,7 +124,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                           {booking.type === 'HOTEL' && booking.hotel && (
                             <div>
                               <h3 className="font-bold text-lg">{booking.hotel.name}</h3>
-                              <p className="text-sm text-gray-600">{booking.hotel.location.name}</p>
+                              <p className="text-sm text-gray-600">{booking.hotel.location?.name}</p>
                               <p className="text-xs text-gray-500 mt-1">Check-in: {new Date(booking.startDate).toLocaleDateString()}</p>
                               <p className="text-xs text-gray-500">Check-out: {new Date(booking.endDate).toLocaleDateString()}</p>
                             </div>
@@ -112,7 +132,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                           {booking.type === 'ACTIVITY' && booking.activity && (
                             <div>
                               <h3 className="font-bold text-lg">{booking.activity.name}</h3>
-                              <p className="text-sm text-gray-600">{booking.activity.location.name}</p>
+                              <p className="text-sm text-gray-600">{booking.activity.location?.name}</p>
                               <p className="text-xs text-gray-500 mt-1">Date: {new Date(booking.startDate).toLocaleDateString()}</p>
                             </div>
                           )}
@@ -145,11 +165,11 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Items</span>
-                  <span className="font-medium">{trip.bookings.length}</span>
+                  <span className="font-medium">{bookings.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Status</span>
-                  <span className="font-medium capitalize">{trip.status.toLowerCase()}</span>
+                  <span className="font-medium capitalize">{(trip.status ?? '').toLowerCase()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">

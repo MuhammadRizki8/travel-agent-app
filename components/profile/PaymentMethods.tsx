@@ -7,17 +7,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard, Trash2, Plus, Loader2 } from 'lucide-react';
-import { addPaymentMethod, deletePaymentMethod } from '@/lib/data/profile';
+import { useRouter } from 'next/navigation';
 
 export default function PaymentMethods({ methods }: { methods: PaymentMethod[] }) {
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function handleAdd(formData: FormData) {
+  const router = useRouter();
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     try {
-      await addPaymentMethod(formData);
-      setIsAdding(false);
+      const form = e.currentTarget as HTMLFormElement;
+      const formData = new FormData(form);
+      const payload = {
+        brand: String(formData.get('brand') || ''),
+        last4Digits: String(formData.get('last4Digits') || ''),
+      };
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/profile/payments`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setIsAdding(false);
+        router.refresh();
+      } else {
+        alert(data?.error || 'Failed to add payment method.');
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to add payment method.');
@@ -29,7 +49,14 @@ export default function PaymentMethods({ methods }: { methods: PaymentMethod[] }
   async function handleDelete(id: string) {
     if (!confirm('Are you sure you want to delete this payment method?')) return;
     try {
-      await deletePaymentMethod(id);
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/profile/payments/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data?.success) {
+        router.refresh();
+      } else {
+        alert(data?.error || 'Failed to delete payment method.');
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to delete payment method.');
@@ -69,7 +96,7 @@ export default function PaymentMethods({ methods }: { methods: PaymentMethod[] }
         {isAdding ? (
           <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
             <h4 className="font-medium text-sm">Add New Card</h4>
-            <form action={handleAdd} className="space-y-4">
+            <form onSubmit={handleAdd} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="brand">Card Brand</Label>

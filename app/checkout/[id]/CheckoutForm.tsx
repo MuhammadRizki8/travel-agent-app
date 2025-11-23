@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { processCheckoutAction } from '@/lib/data/checkout';
+// Use internal API route to process checkout instead of importing server helpers directly
 import { Loader2, CreditCard, Plus } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,10 +24,29 @@ export default function CheckoutForm({ tripId, paymentMethods, totalAmount }: Ch
     if (!selectedMethod) return;
     setLoading(true);
     try {
-      await processCheckoutAction(tripId, selectedMethod);
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/checkout/${tripId}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ paymentMethodId: selectedMethod }),
+      });
+
+      if (!res.ok) throw new Error('Checkout failed');
+      const data = await res.json();
+      if (!data?.success) throw new Error('Checkout failed');
+
+      // If server included a redirect URL, navigate there (server now returns JSON redirect)
+      if (data.redirect) {
+        // If redirect is absolute or relative, assign to location to navigate
+        window.location.href = data.redirect;
+        return;
+      }
+
+      alert('Pembayaran berhasil');
     } catch (error) {
       console.error(error);
       alert('Pembayaran Gagal. Silakan coba lagi.');
+    } finally {
       setLoading(false);
     }
   }

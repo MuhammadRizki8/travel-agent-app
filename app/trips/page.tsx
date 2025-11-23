@@ -1,16 +1,22 @@
 import Link from 'next/link';
-import { getUserId, getUserTrips } from '@/lib/data/index';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, ArrowRight, Plane, Hotel, Ticket } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import CreateTripModal from '@/components/trips/CreateTripModal';
+import { Trip, Booking } from '@/lib/types';
 
 export default async function TripsPage() {
-  const userId = await getUserId();
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await (await import('next/headers')).headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
+  const userRes = await fetch(new URL('/api/user', base).toString());
+  const user = userRes.ok ? await userRes.json() : null;
 
-  if (!userId) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -24,7 +30,8 @@ export default async function TripsPage() {
     );
   }
 
-  const trips = await getUserTrips(userId);
+  const tripsRes = await fetch(new URL('/api/trips', base).toString());
+  const trips: Trip[] = tripsRes.ok ? await tripsRes.json() : [];
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4">
@@ -51,11 +58,12 @@ export default async function TripsPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {trips.map((trip) => {
-              const totalCost = trip.bookings.reduce((sum, b) => sum + b.totalAmount, 0);
-              const bookingCount = trip.bookings.length;
-              const flightCount = trip.bookings.filter((b) => b.type === 'FLIGHT').length;
-              const hotelCount = trip.bookings.filter((b) => b.type === 'HOTEL').length;
-              const activityCount = trip.bookings.filter((b) => b.type === 'ACTIVITY').length;
+              const bookings = (trip.bookings || []) as Booking[];
+              const totalCost = bookings.reduce((sum, b) => sum + (b.totalAmount ?? 0), 0);
+              const bookingCount = bookings.length;
+              const flightCount = bookings.filter((b) => b.type === 'FLIGHT').length;
+              const hotelCount = bookings.filter((b) => b.type === 'HOTEL').length;
+              const activityCount = bookings.filter((b) => b.type === 'ACTIVITY').length;
 
               // Determine status color
               let statusColor = 'bg-gray-100 text-gray-800';
@@ -70,7 +78,7 @@ export default async function TripsPage() {
                       <Badge variant="secondary" className={statusColor}>
                         {trip.status}
                       </Badge>
-                      <span className="text-xs text-gray-400">{new Date(trip.updatedAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-gray-400">{trip.updatedAt ? new Date(trip.updatedAt).toLocaleDateString() : ''}</span>
                     </div>
                     <CardTitle className="text-xl line-clamp-1">{trip.name}</CardTitle>
                     <CardDescription className="flex items-center gap-1">

@@ -13,7 +13,7 @@ interface SearchFiltersProps {
   type: string;
   countries: string[];
   locations: { id: string; name: string; code: string }[];
-  airlines: string[];
+  airlines?: string[];
 }
 
 export function SearchFilters({ type, countries, locations, airlines }: SearchFiltersProps) {
@@ -133,22 +133,24 @@ export function SearchFilters({ type, countries, locations, airlines }: SearchFi
         {/* FLIGHT FILTERS */}
         {type === 'flight' && (
           <div className="space-y-4 mb-6">
-            <div className="space-y-2">
-              <Label>Airline</Label>
-              <Select name="airline" defaultValue={searchParams.get('airline') || ''}>
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="Select Airline" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Airlines</SelectItem>
-                  {airlines.map((airline) => (
-                    <SelectItem key={airline} value={airline}>
-                      {airline}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {airlines && airlines.length > 0 && (
+              <div className="space-y-2">
+                <Label>Airline</Label>
+                <Select name="airline" defaultValue={searchParams.get('airline') || ''}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select Airline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Airlines</SelectItem>
+                    {airlines.map((airline) => (
+                      <SelectItem key={airline} value={airline}>
+                        {airline}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Origin</Label>
               <Select name="origin" defaultValue={searchParams.get('origin') || ''}>

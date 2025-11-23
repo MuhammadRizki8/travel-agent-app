@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import { validateTripConflicts } from '@/lib/data/checkout';
 
 export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
   const router = useRouter();
@@ -16,15 +15,14 @@ export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
   async function handleCheckoutClick() {
     setLoading(true);
     try {
-      // 1. Cek Konflik di Server
-      const foundConflicts = await validateTripConflicts(tripId);
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/checkout/validate?tripId=${encodeURIComponent(tripId)}`);
+      const foundConflicts = res.ok ? await res.json() : [];
 
       if (foundConflicts.length > 0) {
-        // 2. Jika ada konflik, tampilkan warning
         setConflicts(foundConflicts);
         setShowWarning(true);
       } else {
-        // 3. Jika aman, langsung ke halaman checkout
         router.push(`/checkout/${tripId}`);
       }
     } catch (error) {
@@ -50,13 +48,13 @@ export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
               Jadwal Bentrok Terdeteksi
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>Sistem mendeteksi jadwal perjalanan ini bentrok dengan agenda Anda:</p>
+              <div>Sistem mendeteksi jadwal perjalanan ini bentrok dengan agenda Anda:</div>
               <ul className="list-disc pl-5 text-sm text-gray-700 bg-amber-50 p-2 rounded border border-amber-100">
                 {conflicts.map((c, i) => (
                   <li key={i}>{c}</li>
                 ))}
               </ul>
-              <p className="mt-2">Apakah Anda yakin ingin tetap melanjutkan ke pembayaran?</p>
+              <div className="mt-2">Apakah Anda yakin ingin tetap melanjutkan ke pembayaran?</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

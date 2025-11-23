@@ -6,17 +6,22 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import BookingButton from '@/components/BookingButton';
-import { getFlightById, getUserId } from '@/lib/data/index';
 import { formatRupiah } from '@/lib/utils';
 
 export default async function FlightDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  const hdrs = await (await import('next/headers')).headers();
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http';
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const base = envBase ?? `${proto}://${host}`;
   const { id } = await params;
-  const flight = await getFlightById(id);
-  const userId = await getUserId();
+  const flightRes = await fetch(new URL(`/api/flights/${id}`, base).toString());
+  if (!flightRes.ok) return notFound();
+  const flight = await flightRes.json();
 
-  if (!flight) {
-    notFound();
-  }
+  const userRes = await fetch(new URL('/api/user', base).toString());
+  const user = userRes.ok ? await userRes.json() : null;
+  const userId = user?.id ?? null;
 
   const duration = Math.abs(new Date(flight.arrival).getTime() - new Date(flight.departure).getTime()) / 36e5;
 

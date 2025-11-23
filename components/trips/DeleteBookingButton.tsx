@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { deleteBookingAction } from '@/lib/data/booking';
 
 export default function DeleteBookingButton({ bookingId }: { bookingId: string }) {
   const router = useRouter();
@@ -14,14 +13,22 @@ export default function DeleteBookingButton({ bookingId }: { bookingId: string }
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await deleteBookingAction(bookingId);
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const res = await fetch(`${base}/api/bookings/${bookingId}`, { method: 'DELETE' });
+      const data = await res.json();
 
-    if (res.success) {
-      setOpen(false);
-      router.refresh();
-    } else {
+      if (data.success) {
+        setOpen(false);
+        router.refresh();
+      } else {
+        setLoading(false);
+        alert(data.error || 'Gagal menghapus booking');
+      }
+    } catch (err) {
+      console.error(err);
       setLoading(false);
-      alert(res.error || 'Gagal menghapus booking');
+      alert('Gagal menghapus booking');
     }
   };
 

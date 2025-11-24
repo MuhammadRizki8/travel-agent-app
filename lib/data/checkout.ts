@@ -32,7 +32,7 @@ export async function validateTripConflicts(tripId: string) {
       const isOverlapping = booking.startDate < event.end && booking.endDate > event.start;
 
       if (isOverlapping) {
-        conflicts.push(`Booking "${booking.type}" bentrok dengan event "${event.title}" (${event.start.toLocaleDateString()})`);
+        conflicts.push(`Booking "${booking.type}" conflic with event "${event.title}" (${event.start.toLocaleDateString()})`);
       }
     }
   }

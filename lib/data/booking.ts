@@ -33,7 +33,7 @@ export async function createBookingAction(prevState: unknown, formData: FormData
       bookingDetails: details,
       startDate: startDateObj,
       endDate: endDateObj,
-      status: 'PENDING_APPROVAL',
+      status: 'CONFIRMED',
       trip: { connect: { id: tripId } },
     };
 

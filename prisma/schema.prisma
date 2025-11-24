@@ -220,3 +220,14 @@ model SearchPreference {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+// Idempotency store for agent/tool calls to prevent duplicate external provider actions
+model IdempotencyKey {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  toolCallId  String?
+  metadata   String?  // optional JSON
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

@@ -1,18 +1,18 @@
 import { groq } from '@ai-sdk/groq';
-import { streamText, tool, convertToModelMessages, stepCountIs } from 'ai'; // Gunakan streamText, bukan Experimental_Agent
+import { streamText, tool, convertToModelMessages, stepCountIs } from 'ai';
 import type { ModelMessage } from 'ai';
 import { getUserProfile } from '@/lib/data/index';
 import { getSearchPreferencesByUserId } from '@/lib/data/preferences';
 import { searchParametersSchema } from '@/lib/schema';
 import { handleUpdateTripIntent } from '@/lib/tools/updateTripIntent';
+import bookingTools from '@/lib/tools/bookingTools';
+import { makeCreateTripDraftTool } from '@/lib/tools/create_trip_draft';
+import makeCheckoutTripTool, { checkoutSchema } from '@/lib/tools/checkoutTool';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  // 1. Parse Payload
   const { messages: uiMessages, model } = await req.json();
-
-  // Helper: extract readable text from a UIMessage for logging
   function extractTextFromUIMessage(msg: unknown): string | undefined {
     if (!msg || typeof msg !== 'object') return undefined;
     const m = msg as { content?: unknown; parts?: unknown };
@@ -71,16 +71,17 @@ export async function POST(req: Request) {
     You are a professional Travel Planner for user named ${user?.name || 'Guest'}.
     Today: ${today}.
     User travel plans: ${JSON.stringify(searchPreferences || {}, null, 2)}
+    User profile preferences: ${user?.preferences ? JSON.stringify(user.preferences, null, 2) : 'none'}.
     
     TASK:
-    If user travel plan not complete, do alicitation about user travel plans. Collect this mandatory information: Origin, Destination, Start/End Date, number of travelers. and collect this optional information: hotel requirements, budget, and Activity Type.
+    If user travel plan not complete, do alicitation about user travel plans. Collect this mandatory information: Origin/departure, Destination, Start/End Date, number of travelers, hotel requirements, budget, and Activity Type.
     
     RULES:
     1. call tool 'update_trip_intent' when user provides trip info.
     2. Do not ask for everything at once. Be conversational.
-    3. If user travel plan is complete, show a brief summary of the plan and suggest "Do you want me to make iterary for you?".`,
-      stopWhen: stepCountIs(10),
-      // DEFINISI TOOLS (Ini yang menyebabkan error sebelumnya, sekarang akan aman)
+    3. If user travel plan is complete, show a brief summary of the plan and suggest "Do you want me to make iterary for you?".
+    4. if mandatory info is missing, do not offer to create itinerary, instead ask for missing info.`,
+      stopWhen: stepCountIs(20),
       tools: {
         update_trip_intent: tool({
           description: 'Save/Update travel preferences based on user chat.',
@@ -91,6 +92,19 @@ export async function POST(req: Request) {
             console.log('✅ Tool handler returned:', result);
             return result;
           },
+        }),
+        // Note: consolidated search is provided via create_trip_draft which calls
+        // `bookingTools.searchRelevant` internally. Individual search_* tools are
+        // intentionally removed to reduce surface area and keep agent flow simple.
+        create_trip_draft: tool({
+          description: 'Create a provisional trip and populate with provisional bookings (draft).',
+          inputSchema: bookingTools.bookingRequestSchema,
+          execute: makeCreateTripDraftTool(user),
+        }),
+        checkout_trip: tool({
+          description: 'Finalize checkout for a trip: validate payment, check calendar conflicts, and confirm booking.',
+          inputSchema: checkoutSchema,
+          execute: makeCheckoutTripTool(user),
         }),
       },
     });

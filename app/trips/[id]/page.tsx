@@ -84,7 +84,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                 <CardContent className="py-12 text-center">
                   <p className="text-gray-500 mb-4">This trip is empty.</p>
                   <Button variant="outline" asChild>
-                    <Link href="/search">Add Flights or Hotels</Link>
+                    <Link href="/">Add Flights or Hotels</Link>
                   </Button>
                 </CardContent>
               </Card>

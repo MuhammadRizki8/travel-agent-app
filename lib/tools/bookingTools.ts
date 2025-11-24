@@ -136,10 +136,16 @@ export async function createTripDraft() {
   return { error: 'disabled', message: 'createTripDraft is disabled. Use searchRelevant to preview options.' };
 }
 
+// Minimal stub for booking a flight option. Full booking flow lives in server-only helpers.
+export async function bookFlight(_optionId: string, _input: BookingRequest & { userId?: string; paymentMethodId?: string }, _toolCallId?: string) {
+  return { error: 'disabled', message: 'booking not available in this environment' };
+}
+
 const bookingToolsExport = {
   bookingRequestSchema,
   createTripDraft,
   searchRelevant,
+  bookFlight,
 };
 
 export default bookingToolsExport;

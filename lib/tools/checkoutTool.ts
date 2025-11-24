@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { validateTripConflicts, processCheckoutAction } from '@/lib/data/checkout';
+import { validateTripConflicts, processCheckoutAction, type ConflictItem } from '@/lib/data/checkout';
 import type { User } from '@/lib/types';
 
 // Idempotency helpers (no-op stubs exist but we'll keep hooks available)
@@ -46,7 +46,8 @@ export function makeCheckoutTripTool(user: Partial<User> | null) {
     // Determine payment method: prefer explicit input, then user's first saved method
     const resolvedPaymentMethodId = paymentMethodId ?? (user?.paymentMethods && user.paymentMethods.length ? user.paymentMethods[0].id : undefined);
 
-    if (!resolvedPaymentMethodId) {
+    // Ensure resolved payment method belongs to the user
+    if (!resolvedPaymentMethodId || !(user?.paymentMethods && user.paymentMethods.some((p) => p.id === resolvedPaymentMethodId))) {
       return {
         success: false,
         action: 'missing_payment',
@@ -56,7 +57,7 @@ export function makeCheckoutTripTool(user: Partial<User> | null) {
     }
 
     // 1. Check calendar conflicts
-    let conflicts: string[] = [];
+    let conflicts: ConflictItem[] = [];
     try {
       conflicts = await validateTripConflicts(tripId);
     } catch (err) {
@@ -70,33 +71,11 @@ export function makeCheckoutTripTool(user: Partial<User> | null) {
 
     // 2. Proceed to finalize checkout (this may trigger Next redirect internally)
     try {
-      await processCheckoutAction(tripId, resolvedPaymentMethodId);
-      // If processCheckoutAction completes without throwing redirect, return success
+      // Call finalizer without performing a server-side redirect so the tool can handle the result
+      const result = await processCheckoutAction(tripId, resolvedPaymentMethodId, { doRedirect: false });
       if (idempotencyKey) await markIdempotencyUsed(idempotencyKey);
-      return { success: true };
+      return { success: true, result };
     } catch (innerErr: unknown) {
-      const maybeErr = innerErr as { digest?: unknown; message?: unknown } | undefined;
-      const digest = typeof maybeErr?.digest === 'string' ? maybeErr.digest : typeof maybeErr?.message === 'string' ? maybeErr.message : undefined;
-
-      // Detect Next.js redirect triggered by `redirect()` in server actions
-      if (typeof digest === 'string' && digest.includes('NEXT_REDIRECT')) {
-        const m = (digest as string).match(/NEXT_REDIRECT;[^;]*;([^;]+);(\d+);/);
-        if (m) {
-          let url = m[1];
-          try {
-            if (url.startsWith('/')) {
-              const origin = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-              url = new URL(url, origin).toString();
-            }
-          } catch {
-            url = `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/trips/${tripId}`;
-          }
-
-          if (idempotencyKey) await markIdempotencyUsed(idempotencyKey);
-          return { success: true, redirect: url };
-        }
-      }
-
       console.error('checkout_trip: processCheckoutAction failed:', String(innerErr));
       return { success: false, error: 'checkout_failed', details: String(innerErr) };
     }

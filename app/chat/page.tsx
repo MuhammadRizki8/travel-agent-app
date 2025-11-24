@@ -31,6 +31,8 @@ import { Source, Sources, SourcesContent, SourcesTrigger } from '@/components/ai
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning';
 import { Loader } from '@/components/ai-elements/loader';
 import DebugPreferences from '@/components/ai-elements/DebugPreferences';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useRouter } from 'next/navigation';
 // DraftTripCard handles rendering of draft trip and booking cards
 // Typed shapes for draft trip + bookings fetched from server
 type BookingItem = {
@@ -135,6 +137,8 @@ const ChatBot = () => {
   const [sessionParams, setSessionParams] = useState<Record<string, unknown> | null>(null);
   const [draftTrip, setDraftTrip] = useState<DraftTrip | null>(null);
   const [draftLoading, setDraftLoading] = useState(false);
+  const [panelAlert, setPanelAlert] = useState<{ type: 'success' | 'error' | 'warning'; title: string; desc?: string; redirect?: string } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
@@ -361,22 +365,15 @@ const ChatBot = () => {
 
             {/* Debug preferences always shown at top */}
             <div className="space-y-4">
-              <DebugPreferences
-                show={showSchema}
-                onToggle={() => setShowSchema((s) => !s)}
-                onClear={async () => {
-                  try {
-                    await fetch('/api/preferences', { method: 'DELETE' });
-                  } catch (e) {
-                    console.debug('Failed to clear persisted preferences on server', e);
-                  }
-                  setSessionParams(null);
-                }}
-                schemaFields={schemaFields}
-                displayParams={displayParams}
-              />
+              {/* Panel Alert (validation / success) */}
+              {panelAlert ? (
+                <Alert variant={panelAlert.type === 'error' ? 'destructive' : 'default'}>
+                  <AlertTitle>{panelAlert.title}</AlertTitle>
+                  {panelAlert.desc ? <AlertDescription>{panelAlert.desc}</AlertDescription> : null}
+                </Alert>
+              ) : null}
 
-              {/* Draft trip shown below DebugPreferences if present */}
+              {/* If there's a draft, show it at the top; otherwise show preferences first */}
               {draftLoading ? (
                 <div>Loading draft...</div>
               ) : draftTrip ? (
@@ -388,9 +385,36 @@ const ChatBot = () => {
                   onCheckoutSuccess={async (data) => {
                     setDraftTrip(null);
                     await sendMessage({ text: `Checked out trip ${draftTrip.id}: ${JSON.stringify(data)}` });
+                    setPanelAlert({ type: 'success', title: 'Checkout successful', desc: 'Redirecting to trips...' });
+                    // If API returned redirect, use it; otherwise go to /trips
+                    const redirectCandidate = (data as { redirect?: unknown })?.redirect;
+                    const redirectUrl = typeof redirectCandidate === 'string' ? redirectCandidate : '/trips';
+                    setTimeout(() => router.push(String(redirectUrl)), 900);
+                  }}
+                  onValidation={(conflicts) => {
+                    setPanelAlert({ type: 'warning', title: 'Calendar conflicts detected', desc: `${conflicts.length} conflict(s) found` });
+                  }}
+                  onNavigate={(url) => {
+                    // immediate navigation for warnings that require profile changes
+                    router.push(url);
                   }}
                 />
-              ) : null}
+              ) : (
+                <DebugPreferences
+                  show={showSchema}
+                  onToggle={() => setShowSchema((s) => !s)}
+                  onClear={async () => {
+                    try {
+                      await fetch('/api/preferences', { method: 'DELETE' });
+                    } catch (e) {
+                      console.debug('Failed to clear persisted preferences on server', e);
+                    }
+                    setSessionParams(null);
+                  }}
+                  schemaFields={schemaFields}
+                  displayParams={displayParams}
+                />
+              )}
             </div>
           </div>
         </aside>

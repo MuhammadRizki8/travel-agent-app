@@ -129,3 +129,12 @@ export async function validateDateConflict(startDate: Date, endDate: Date) {
 
   return conflicts;
 }
+
+export async function getPaymentMethods() {
+  const userId = await getUserId();
+  if (!userId) return [];
+
+  return prisma.paymentMethod.findMany({
+    where: { userId },
+  });
+}

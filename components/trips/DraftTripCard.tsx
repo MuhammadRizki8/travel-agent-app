@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 import DeleteBookingButton from '@/components/trips/DeleteBookingButton';
 import { parseBookingDetails, getBookingCardFields, formatPrice } from '@/lib/utils/bookingHelpers';
 
@@ -30,17 +31,32 @@ type DraftTrip = {
   bookings?: BookingItem[];
 };
 
+type Conflict = {
+  bookingId?: string;
+  bookingType?: string | null;
+  bookingStart?: string | null;
+  bookingEnd?: string | null;
+  eventId?: string;
+  eventTitle?: string | null;
+  eventStart?: string | null;
+  eventEnd?: string | null;
+  message?: string;
+};
+
 interface Props {
   draftTrip: DraftTrip;
   onDeleted?: () => void;
-  onCheckoutSuccess?: (data: any) => void;
+  onCheckoutSuccess?: (data: unknown) => void;
+  onValidation?: (conflicts: Array<Record<string, unknown>>) => void;
+  onNavigate?: (url: string) => void;
 }
 
-export default function DraftTripCard({ draftTrip, onDeleted, onCheckoutSuccess }: Props) {
+export default function DraftTripCard({ draftTrip, onDeleted, onCheckoutSuccess, onValidation, onNavigate }: Props) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
-  const [conflicts, setConflicts] = useState<Array<Record<string, unknown>>>([]);
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const router = useRouter();
 
   const tripName = draftTrip?.name ?? '';
   const tripDescription = draftTrip?.description ?? '';
@@ -59,7 +75,6 @@ export default function DraftTripCard({ draftTrip, onDeleted, onCheckoutSuccess 
       if (!res.ok) throw new Error('delete failed');
       setIsDeleteDialogOpen(false);
       if (onDeleted) onDeleted();
-      alert('Draft trip deleted');
     } catch (err) {
       console.error('Failed to delete draft', err);
       alert('Failed to delete draft');
@@ -81,15 +96,22 @@ export default function DraftTripCard({ draftTrip, onDeleted, onCheckoutSuccess 
       const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tripId: draftTrip.id, proceedIfConflicts, toolCallId }) });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data?.error === 'conflict') {
-        setConflicts(Array.isArray(data.conflicts) ? data.conflicts : []);
+        const cs = Array.isArray(data.conflicts) ? data.conflicts : [];
+        setConflicts(cs);
         setIsConflictDialogOpen(true);
+        if (onValidation) onValidation(cs);
       } else if (res.status === 400 && data?.error === 'no_payment_method') {
-        window.location.href = data.redirect ?? '/profile';
+        const redirect = data.redirect ?? '/profile';
+        if (onNavigate) onNavigate(redirect);
+        else router.push(redirect);
       } else if (!res.ok) {
         throw new Error('checkout failed');
       } else {
         if (onCheckoutSuccess) onCheckoutSuccess(data);
-        alert('Checkout complete');
+        // allow parent navigation handler to take precedence
+        if (onNavigate && data?.redirect) {
+          onNavigate(String(data.redirect));
+        }
       }
     } catch (err) {
       console.error('Checkout error', err);
@@ -196,9 +218,9 @@ export default function DraftTripCard({ draftTrip, onDeleted, onCheckoutSuccess 
                 {conflicts.length > 0 ? (
                   conflicts.map((c, i) => (
                     <div key={i} className="p-2 border-b last:border-b-0">
-                      <div className="text-sm font-medium">{String(c.title ?? c.name ?? 'Event')}</div>
+                      <div className="text-sm font-medium">{String(c.eventTitle ?? 'Event')}</div>
                       <div className="text-xs text-muted-foreground">
-                        {String(c.start ?? c.time ?? '')} — {String(c.end ?? '')}
+                        {String(c.eventStart ? new Date(String(c.eventStart)).toLocaleString() : '')} — {String(c.eventEnd ? new Date(String(c.eventEnd)).toLocaleString() : '')}
                       </div>
                     </div>
                   ))

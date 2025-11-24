@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getUserProfile } from '@/lib/data/index';
 import { findIdempotencyKey, createIdempotencyKey, markIdempotencyUsed } from '@/lib/providers/idempotency';
+import { validateTripConflicts } from '@/lib/data/checkout';
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -42,21 +43,14 @@ export async function POST(req: Request) {
     }
   }
 
-  // Check calendar conflicts
-  const conflicts: Array<{ bookingId: string; eventId: string; eventTitle: string }> = [];
-  for (const booking of trip.bookings) {
-    const overlapping = await prisma.calendarEvent.findMany({ where: { userId: user.id, AND: [{ start: { lte: booking.endDate } }, { end: { gte: booking.startDate } }] } });
-    for (const ev of overlapping) {
-      conflicts.push({ bookingId: booking.id, eventId: ev.id, eventTitle: ev.title });
-    }
-  }
-
+  // Check calendar conflicts using shared helper which returns structured conflict items
+  const conflicts = await validateTripConflicts(tripId);
   if (conflicts.length > 0 && !proceedIfConflicts) {
     return new Response(JSON.stringify({ error: 'conflict', conflicts }), { status: 409 });
   }
 
   // Finalize bookings (mock): mark each booking CONFIRMED
-  const updatedBookings = [] as any[];
+  const updatedBookings = [] as unknown[];
   for (const booking of trip.bookings) {
     const ub = await prisma.booking.update({ where: { id: booking.id }, data: { status: 'CONFIRMED' } });
     updatedBookings.push(ub);

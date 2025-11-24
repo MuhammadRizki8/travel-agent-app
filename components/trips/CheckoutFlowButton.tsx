@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import type { ConflictItem } from '@/lib/data/checkout';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
@@ -17,10 +18,23 @@ export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE ?? '';
       const res = await fetch(`${base}/api/checkout/validate?tripId=${encodeURIComponent(tripId)}`);
-      const foundConflicts = res.ok ? await res.json() : [];
+      const foundConflicts = res.ok ? ((await res.json()) as ConflictItem[]) : [];
 
-      if (foundConflicts.length > 0) {
-        setConflicts(foundConflicts);
+      // API may return structured conflict objects; normalize to strings for rendering
+      const messages: string[] = Array.isArray(foundConflicts)
+        ? foundConflicts.map((it) => {
+            if (it == null) return String(it);
+            if (typeof it === 'string') return it;
+            if (typeof it === 'object' && it !== null && 'message' in it) {
+              const msg = (it as { message?: unknown }).message;
+              return typeof msg === 'string' ? msg : String(msg);
+            }
+            return JSON.stringify(it);
+          })
+        : [];
+
+      if (messages.length > 0) {
+        setConflicts(messages);
         setShowWarning(true);
       } else {
         router.push(`/checkout/${tripId}`);
@@ -47,7 +61,7 @@ export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
               <AlertTriangle className="h-5 w-5" />
               Jadwal Bentrok Terdeteksi
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
+            <div className="space-y-2">
               <div>Sistem mendeteksi jadwal perjalanan ini bentrok dengan agenda Anda:</div>
               <ul className="list-disc pl-5 text-sm text-gray-700 bg-amber-50 p-2 rounded border border-amber-100">
                 {conflicts.map((c, i) => (
@@ -55,7 +69,7 @@ export default function CheckoutFlowButton({ tripId }: { tripId: string }) {
                 ))}
               </ul>
               <div className="mt-2">Apakah Anda yakin ingin tetap melanjutkan ke pembayaran?</div>
-            </AlertDialogDescription>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
